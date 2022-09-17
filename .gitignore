@@ -88,3 +88,8 @@ fastlane/test_output
 # https://github.com/johnno1962/injectionforxcode
 
 iOSInjectionProject/
+Test/GameEngine/Assets.xcassets
+Test/GameEngine/3ds
+*.DS_Store
+*.xcworkspacedata
+Test/GameEngine.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
