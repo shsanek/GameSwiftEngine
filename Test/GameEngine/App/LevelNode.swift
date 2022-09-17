@@ -28,9 +28,9 @@ class LevelNode: Node {
 
     init(text: String) {
         super.init()
-        addRenderInputs(walls)
-        addRenderInputs(emptyBottoms)
-        addRenderInputs(emptyTops)
+        addRenderInput(walls)
+        addRenderInput(emptyBottoms)
+        addRenderInput(emptyTops)
         let result: [[RawMapTitle]] = text.split(separator: "\n").map {
             $0.map { RawMapTitle(rawValue: "\($0)") ?? .empty }
         }

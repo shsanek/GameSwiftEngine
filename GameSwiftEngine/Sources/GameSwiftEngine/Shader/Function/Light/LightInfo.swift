@@ -20,7 +20,6 @@ final class LightInfo {
         var maxShadow: Int = 5
     }
 
-    var shadowSize: Size = .init(width: 512, height: 512)
     let lightInputCache = MetalBufferCache()
     var lights: [LightProvider] = []
     var buffer: MTLBuffer? = nil
@@ -132,46 +131,4 @@ extension Optional where Wrapped == LightInfo {
         return (buffer, lights.count)
     }
 }
-
-extension LightInfo {
-//    func toArrayShadows(for device: MTLDevice) throws -> MTLTexture? {
-//        guard !shadows.isEmpty else {
-//            return nil
-//        }
-//        let depthTextureDescriptor = MTLTextureDescriptor.texture2DDescriptor(
-//            pixelFormat: .depth32Float,
-//            width: Int(shadowSize.width),
-//            height: Int(shadowSize.height),
-//            mipmapped: false
-//        )
-//        depthTextureDescriptor.usage = [.renderTarget, .shaderRead, .shaderWrite, .pixelFormatView]
-//        depthTextureDescriptor.textureType = .type2DArray
-//        depthTextureDescriptor.storageMode = .private
-//        depthTextureDescriptor.arrayLength = 5
-//        depthTextureDescriptor.resourceOptions = [.storageModePrivate]
-////        let depthTexture = device.makeTexture(descriptor: depthTextureDescriptor)
-////        let height = Int(shadowSize.height)
-////        let width = Int(shadowSize.width)
-////        for container in shadows.enumerated() {
-////            guard let texture = container.element.getMLTexture(device: device) else {
-////                continue
-////            }
-////            let data = UnsafeMutableRawPointer.allocate(bytes: bytesPerRow * height, alignedTo: 4)
-////            defer {
-////                data.deallocate(bytes: bytesPerRow * height, alignedTo: 4)
-////            }
-////            texture.getBytes(UnsafeMutableRawPointer, bytesPerRow: <#T##Int#>, from: <#T##MTLRegion#>, mipmapLevel: <#T##Int#>)
-////            depthTexture?.replace(
-////                region: .init(
-////                    origin: .init(x: 0, y: 0, z: 0),
-////                    size: .init(width: shadowSize.width, height: shadowSize.height, depth: 1)
-////                ),
-////                mipmapLevel: 0,
-////                withBytes: texture.getMLTexture(device: device).,
-////                bytesPerRow: shadowSize.width * 4
-////            )
-////        }
-//    }
-}
-
 

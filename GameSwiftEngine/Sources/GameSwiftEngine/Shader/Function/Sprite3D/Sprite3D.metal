@@ -124,7 +124,7 @@ sprite3DFragmentShader(
             cordinate.x = cordinate.x / 2 + 0.5;
 
             float zLight = float(shadows.sample(linerSampler, cordinate, lights[i].shadowMap)) * position.w;
-            if (position.z > zLight - lights[i].shadowShiftZ) {
+            if (position.z - 0.001 > zLight - lights[i].shadowShiftZ) {
                 power = 0;
             }
         }
@@ -136,4 +136,21 @@ sprite3DFragmentShader(
     }
 
     return float4(colorSample);
+}
+
+fragment float4
+sprite3DMirrorFragmentShader(
+                       RasterizerData  in           [[stage_in]],
+                       texture2d<half> colorTexture [[ texture(0) ]]
+                       )
+{
+    constexpr sampler nearestSampler (mag_filter::nearest,
+                                      min_filter::nearest);
+    float4 colorSample = float4(colorTexture.sample (nearestSampler, in.textureCoordinate));
+
+    return colorSample;
+}
+
+fragment float4 sprite3DEmptyFragmentShader(RasterizerData in [[stage_in]] ){
+    return float4( 0, 0, 0, 0);
 }

@@ -18,7 +18,7 @@ class PlayerNode: Node {
     init(camera: CameraNode = CameraNode()) {
         self.camera = camera
         super.init()
-        self.isHidden = true
+
         addSubnode(container)
         container.addSubnode(camera)
         self.dynamicCollisionRadius = 0.5
@@ -30,7 +30,14 @@ class PlayerNode: Node {
         light.color = .one
         light.move(to: .init(0.05, -0.3, 0))
         light.isShadow = true
-        //camera.addSubnode(light)
+        light.shadowSkipFrame = 0
+        camera.addSubnode(light)
+
+        let zoombe = ZombeeNode()
+        addSubnode(zoombe)
+        zoombe.move(to: .init(x: 0, y: 0, z: 0.2))
+        //zoombe.rotate(on: .pi, axis: .init(0, 1, 0))
+
     }
 
     override func loop(_ time: Double, size: Size) throws {

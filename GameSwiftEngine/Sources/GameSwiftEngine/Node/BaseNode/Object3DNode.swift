@@ -42,7 +42,7 @@ public final class Object3DNode: Node {
         self.encoder = Sprite3DInput(texture: texture, vertexs: object.getVertexs())
         self.baseFrame = object.getBoneTransform().map { $0.transform.inverse }
         super.init()
-        addRenderInputs(encoder)
+        addRenderInput(encoder)
         self.encoder.vertexIndexs.values = object.getIndexs()
     }
     

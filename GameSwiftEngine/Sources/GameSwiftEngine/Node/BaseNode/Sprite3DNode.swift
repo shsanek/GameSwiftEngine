@@ -26,7 +26,7 @@ public final class Sprite3DNode: Node {
         self.encoder = encoder
         self.texture = texture
         super.init()
-        addRenderInputs(encoder)
+        addRenderInput(encoder)
     }
 
     public init(
@@ -40,6 +40,6 @@ public final class Sprite3DNode: Node {
         self.encoder = encoder
         self.texture = texture
         super.init()
-        addRenderInputs(encoder)
+        addRenderInput(encoder)
     }
 }

@@ -1,13 +1,14 @@
 import GameSwiftEngine
 
 final class ZombeeNode: Node {
+    static let object = InterQuakeImporter.loadFile("zombee")
     override init() {
         super.init()
         loadModel()
     }
 
     private func loadModel() {
-        guard let object = InterQuakeImporter.loadFile("zombee") else {
+        guard let object = ZombeeNode.object else {
             return
         }
         let node = Object3DNode(object: object, texture: Texture.load(in: "SUPPORT_7C"))
@@ -20,11 +21,17 @@ final class ZombeeNode: Node {
         node.scale(to: .init(0.1, 0.1, 0.1))
         node.move(to: .init(0, -0.5, 0))
         node.rotate(on: -.pi/2, axis: .init(1, 0, 0))
-        node.rotate(on: .pi, axis: .init(0, 1, 0))
 
         let light = LightNode()
         light.color = .init(0, 1, 0)
-        light.power = 0.01
-        //addSubnode(light)
+        light.power = 0.005
+        addSubnode(light)
+
+        rotate(on: .pi, axis: .init(0, 1, 0))
+
+        var animation2 = NodeAnimation.move(to: .init(x: 7, y: 0, z: 1))
+        animation2.duration = 30
+        //addAnimation(animation2)
+
     }
 }

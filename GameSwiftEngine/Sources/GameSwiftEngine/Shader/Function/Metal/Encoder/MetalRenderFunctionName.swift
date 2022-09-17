@@ -1,9 +1,13 @@
 import Foundation
 
-struct MetalMetalRenderFunctionName {
+struct MetalRenderFunctionName: Hashable {
     let bundle: Bundle
     let vertexFunction: String
     let fragmentFunction: String
+
+    var name: String {
+        return "\(bundle).\(vertexFunction).\(fragmentFunction)"
+    }
 
     init(
         bundle: Bundle = .main,

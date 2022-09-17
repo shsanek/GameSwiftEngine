@@ -6,8 +6,8 @@ public final class LoopController {
 
     private let commandQueue: MTLCommandQueue?
     private let device: MTLDevice
+    private let functions = RenderFunctionsCache()
     private var lastTime: Double?
-    private var functions: [String: AnyObject] = [:]
 
     init(device: MTLDevice) {
         self.device = device
@@ -100,13 +100,25 @@ public final class LoopController {
             time: 0.1,
             device: device,
             descriptor: descriptor,
-            buffer: buffer,
             encoder: encoder,
             size: .init(x: Float(size.width), y: Float(size.height)),
+            attributes: camera.renderInfo.renderAttributes,
+            functionCache: functions,
             projectionMatrix: perspectiveMatrix(aspectRatio: Float(size.width / size.height)),
-            lightInfo: node.lightController.lightInfo,
-            renderType: camera === node.mainCamera ? .mainRender : .shadowRender
+            lightInfo: node.lightController.lightInfo
         )
+
+        let viewPort = MTLViewport(
+            originX: 0,
+            originY: 0,
+            width: Double(input.size.x),
+            height: Double(input.size.y),
+            znear: -1,
+            zfar: 1
+        )
+
+
+        encoder.setViewport(viewPort)
 
         var outputError: Error?
         do {
@@ -118,7 +130,6 @@ public final class LoopController {
                 camera: camera,
                 node: node,
                 cameraMatrix: cameraMatrix,
-                with: &functions,
                 renderInput: input
             )
         }

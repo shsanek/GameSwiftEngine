@@ -37,7 +37,7 @@ class DoorNode: Node, INodeActive {
                 .init(position: .init(x: x, y: y, z: z), uv: .init(1, 1))
             ]
         )
-        addRenderInputs(encoder)
+        addRenderInput(encoder)
 
         addCollision(y: z, angle: 0)
         addCollision(y: -z, angle: -.pi)
@@ -45,7 +45,7 @@ class DoorNode: Node, INodeActive {
         let light = LightNode()
         light.power = 0.05
         light.color = .init(x: 1, y: 0, z: 0)
-        addSubnode(light)
+        //addSubnode(light)
         light.move(to: .init(0, 0.5, 0))
     }
 

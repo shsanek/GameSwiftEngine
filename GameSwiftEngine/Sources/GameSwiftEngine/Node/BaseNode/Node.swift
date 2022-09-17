@@ -20,7 +20,7 @@ open class Node {
         }
     }
 
-    private(set) var renderInputs: [AnyInputRenderEncodable] = []
+    private(set) var renderInputs: [AnyRenderHandler] = []
     private(set) var subnodes: [Node] = []
     private var animations: [NodeAnimationController] = []
 
@@ -308,11 +308,11 @@ extension Node {
 }
 
 extension Node {
-    public func addRenderInputs(_ encodable: AnyInputRenderEncodable) {
+    public func addRenderInput(_ encodable: AnyRenderHandler) {
         renderInputs.append(encodable)
     }
 
-    public func removeRenderInputs(_ encodable: AnyInputRenderEncodable) {
+    public func removeRenderInputs(_ encodable: AnyRenderHandler) {
         renderInputs.removeAll(where: { $0 === encodable })
     }
 }
@@ -360,7 +360,6 @@ extension Node {
         node: Node,
         cameraMatrix: matrix_float4x4,
         modelMatrix: matrix_float4x4 = .init(1),
-        with functions: inout [String: AnyObject],
         renderInput: MetalRenderInput
     ) throws {
         if node.isHidden == false {
@@ -371,7 +370,6 @@ extension Node {
                     node: node,
                     cameraMatrix: cameraMatrix,
                     modelMatrix: modelMatrix,
-                    with: &functions,
                     renderInput: renderInput
                 )
             }
@@ -379,7 +377,7 @@ extension Node {
             renderInput.projectionMatrix = cameraMatrix
             renderInput.currentPosition = modelMatrix
             for input in node.renderInputs {
-                try input.run(with: &functions, input: renderInput)
+                try input.run(input: renderInput)
             }
         }
     }

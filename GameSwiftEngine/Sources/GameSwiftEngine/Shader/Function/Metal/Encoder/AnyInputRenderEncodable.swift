@@ -1,20 +1,22 @@
 import MetalKit
 
-public protocol AnyInputRenderEncodable: AnyObject {
+public protocol AnyRenderHandler: AnyObject {
 }
 
-extension AnyInputRenderEncodable {
-    func run(with functions: inout [String: AnyObject], input: MetalRenderInput) throws {
-        try (self as? MetalInputRenderEncodable)?.run(with: &functions, input: input)
+extension AnyRenderHandler {
+    func run(
+        input: MetalRenderInput
+    ) throws {
+        try (self as? MetalRenderHandler)?.run(
+            input: input
+        )
     }
 }
 
-extension MetalInputRenderEncodable {
-    func run(with functions: inout [String: AnyObject], input: MetalRenderInput) throws {
-        let name = Self.name
-        typealias Function = MetalRenderFunction<Self>
-        let function: Function = try ((functions[name] as? Function) ?? (Function(device: input.device)))
-        functions[name] = function
+extension MetalRenderHandler {
+    func run(
+        input: MetalRenderInput
+    ) throws {
         if var change = self as? ScreenSizeChangable {
             change.renderSize = .init(UInt32(input.size.x), UInt32(input.size.y))
         }
@@ -27,20 +29,12 @@ extension MetalInputRenderEncodable {
         if var change = self as? LightInfoChangable {
             change.lightInfo = input.lightInfo
         }
-        let viewPort = MTLViewport(
-            originX: 0,
-            originY: 0,
-            width: Double(input.size.x),
-            height: Double(input.size.y),
-            znear: -1,
-            zfar: 1
-        )
 
-        try function.render(
-            buffer: input.buffer,
-            input: self,
-            viewport: viewPort,
-            encoder: input.encoder
+        try self.renderEncode(
+            input.encoder,
+            device: input.device,
+            attributes: input.attributes,
+            functionsСache: input.functionCache
         )
     }
 }

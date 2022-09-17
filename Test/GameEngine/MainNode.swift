@@ -23,7 +23,7 @@ final class MainNode: SceeneNode {
         light.move(to: .init(-7, -0.33333334, -10))
         light.rotate(to: -.pi, axis: .init(0, 1, 0))
         light.isShadow = true
-        self.addSubnode(light)
+        //self.addSubnode(light)
 
         let level = LevelNode(text: testMap)
         level.rotate(to: .pi, axis: .init(x: 0, y: 1, z: 0))
@@ -48,8 +48,8 @@ weeeeeeeeeeeeeeeew
 weeeeeeeeeeeeeeeew
 weeeeeeeeeeeeeeeew
 weeeeeeeeeeewwweew
-weeeeeeeeeeedlweew
-wwwwwwwdwwwwwwwwww
+weeeeeeezeeedlweew
+wwwwwwwewwwwwwwwww
 weeeeeeeeeeeeeeeew
 weeeeeeeeeeeeeeeew
 weeeeeezeeemeeeeew

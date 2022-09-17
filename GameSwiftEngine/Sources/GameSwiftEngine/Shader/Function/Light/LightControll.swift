@@ -2,7 +2,6 @@ import simd
 import MetalKit
 
 final class LightController {
-    var shadowSize: Size = .init(width: 512, height: 512)
     private(set) var lightInfo = LightInfo()
     private(set) var lightNodes: [LightNode] = []
 
@@ -20,7 +19,6 @@ final class LightController {
         lightInfo.buffer = nil
         lightInfo.loop()
         lightNodes.forEach { $0.calculate() }
-        lightInfo.shadowSize = shadowSize
     }
 
     func getTextureForShadow(lock: Int) -> ShadowMapInfo? {

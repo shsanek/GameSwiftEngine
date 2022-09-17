@@ -22,12 +22,25 @@ public final class Sprite2DInput: ScreenSizeChangable {
     }
 }
 
-extension Sprite2DInput: MetalInputRenderEncodable {
-    static var render: MetalMetalRenderFunctionName? {
-        return .init(vertexFunction: "sprite2DVertexShader", fragmentFunction: "sprite2DFragmentShader")
+extension Sprite2DInput: MetalRenderHandler {
+    static let spriteFuntion = MetalRenderFunctionName(
+        vertexFunction: "sprite2DVertexShader",
+        fragmentFunction: "sprite2DFragmentShader"
+    )
+
+    static var dependencyFunctions: [MetalRenderFunctionName] {
+        [spriteFuntion]
     }
 
-    func renderEncode(_ encoder: MTLRenderCommandEncoder, device: MTLDevice) throws {
+    func renderEncode(
+        _ encoder: MTLRenderCommandEncoder,
+        device: MTLDevice,
+        attributes: RenderAttributes,
+        functionsСache: RenderFunctionsCache
+    ) throws {
+        try functionsСache
+            .get(with: Self.spriteFuntion, device: device)
+            .start(encoder: encoder)
         guard let texture = self.texture.getMLTexture(device: device) else {
             return
         }

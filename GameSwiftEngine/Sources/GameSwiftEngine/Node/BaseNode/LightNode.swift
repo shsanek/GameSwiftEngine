@@ -90,12 +90,18 @@ public final class LightNode: Node, CameraNodeDelegate {
             camera.isActive = false
             return
         }
+        camera.renderInfo.renderAttributes.set(.ignoreColorBuffer, value: true)
         camera.projectionMatrix = perspectiveMatrix(
             fovyRadians: (angle ?? 0) + (attenuationAngle ?? 0),
             aspectRatio: 1
         )
+        camera.renderInfo.size = .init(
+            width: Float32(mapInfo.texture.width),
+            height: Float32(mapInfo.texture.height)
+        )
         camera.renderInfo.depthInfo.depth = mapInfo.texture
         camera.renderInfo.depthInfo.arrayIndex = mapInfo.index
+        camera.renderInfo.colorInfo.color = TextureFactory.makeColorTexture(size: .init(width: 512, height: 512))
 
         provider.light.shadowShiftZ = camera.projectionMatrix[3][2]
         provider.light.shadowMap = Int32(mapInfo.index)
