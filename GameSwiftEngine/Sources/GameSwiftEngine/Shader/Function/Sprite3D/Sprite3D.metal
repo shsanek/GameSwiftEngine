@@ -39,6 +39,9 @@ struct Light {
     float3 direction;
     float angle;
     float attenuationAngle;
+    float4x4 shadowProjection;
+    int shadowMap;
+    float shadowShiftZ;
 };
 
 vertex RasterizerData
@@ -78,13 +81,16 @@ fragment float4
 sprite3DFragmentShader(
                        RasterizerData  in           [[stage_in]],
                        texture2d<half> colorTexture [[ texture(0) ]],
+                       depth2d_array<float, access::sample> shadows [[ texture(1) ]],
                        constant Light *lights [[ buffer(0) ]],
                        constant int *numberOfLights [[ buffer(1) ]]
                        )
 {
-    constexpr sampler textureSampler (mag_filter::linear,
-                                      min_filter::linear);
-    float4 colorSample = float4(colorTexture.sample (textureSampler, in.textureCoordinate));
+    constexpr sampler linerSampler (mag_filter::linear,
+                                    min_filter::linear);
+    constexpr sampler nearestSampler (mag_filter::nearest,
+                                      min_filter::nearest);
+    float4 colorSample = float4(colorTexture.sample (nearestSampler, in.textureCoordinate));
 
     // Light
     float4 light = float4(0, 0, 0, 1);
@@ -109,6 +115,18 @@ sprite3DFragmentShader(
         }
         if (ceilStep > 0) {
             lng = ceil(power / ceilStep) * power;
+        }
+        if (lights[i].shadowMap > -1 && power > 0.001) {
+            float4 position = lights[i].shadowProjection * float4(in.realPosition, 1);
+            float2 cordinate = position.xy / position.w;
+
+            cordinate.y = -cordinate.y / 2 + 0.5;
+            cordinate.x = cordinate.x / 2 + 0.5;
+
+            float zLight = float(shadows.sample(linerSampler, cordinate, lights[i].shadowMap)) * position.w;
+            if (position.z > zLight - lights[i].shadowShiftZ) {
+                power = 0;
+            }
         }
         float3 color = lights[i].color * power;
         light = light + float4(color, 1);

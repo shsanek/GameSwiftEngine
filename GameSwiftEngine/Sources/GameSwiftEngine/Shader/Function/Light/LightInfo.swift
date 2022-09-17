@@ -10,14 +10,106 @@ final class LightInfo {
         var direction: vector_float3 = .init(x: 0, y: 0, z: 1)
         var angle: Float = .pi
         var attenuationAngle: Float = -1
+        var shadowProjection: matrix_float4x4 = .init(1)
+        var shadowMap: Int32 = -1
+        var shadowShiftZ: Float = 0.1
     }
 
+    struct LightInfoSetting: Hashable {
+        var shadowMapSize: Size = .init(width: 512, height: 512)
+        var maxShadow: Int = 5
+    }
+
+    var shadowSize: Size = .init(width: 512, height: 512)
     let lightInputCache = MetalBufferCache()
     var lights: [LightProvider] = []
-
     var buffer: MTLBuffer? = nil
     weak var device: MTLDevice? = nil
     var count: Int = 0
+
+    var settings = LightInfoSetting()
+
+    private var shadowCount: Int {
+        shadowMapInfos.filter { $0.isActual }.count
+    }
+    private(set) var shadowMapTexture: ITexture? = nil
+    private var shadowMapInfos: [ShadowMapInfo] = []
+
+    init() {
+        updateSetting()
+    }
+
+    func loop() {
+        shadowMapInfos.forEach { $0.loop() }
+        shadowMapInfos = shadowMapInfos.map {
+            $0.needRemaker ? .init(index: $0.index, texture: $0.texture) : $0
+        }
+    }
+
+    func getTextureForShadow(lock: Int) -> ShadowMapInfo? {
+        guard
+            let freeInfo = shadowMapInfos.first(where: { !$0.isActual })
+        else {
+            return nil
+        }
+        freeInfo.retain(lock: lock)
+        return freeInfo
+    }
+
+    private func updateSetting() {
+        shadowMapInfos.forEach { $0.free() }
+        let shadowMapTexture = TextureFactory.makeArrayDepthTexture(
+            size: settings.shadowMapSize,
+            count: settings.maxShadow
+        )
+        self.shadowMapTexture = shadowMapTexture
+        shadowMapInfos = (0..<settings.maxShadow).map {
+            ShadowMapInfo(index: $0, texture: shadowMapTexture)
+        }
+    }
+}
+
+final class ShadowMapInfo {
+    let index: Int
+    let texture: ITexture
+
+    var isActual: Bool {
+        return lock > 0
+    }
+
+    var description: String {
+        "i:\(index) l:\(lock)"
+    }
+
+    fileprivate private(set) var needRemaker: Bool = false
+
+    private var lock: Int = 0 {
+        didSet {
+            if lock < 0 {
+                lock = 0
+            }
+            if lock <= 0 {
+                needRemaker = true
+            }
+        }
+    }
+
+    init(index: Int, texture: ITexture) {
+        self.index = index
+        self.texture = texture
+    }
+
+    fileprivate func retain(lock: Int) {
+        self.lock += lock
+    }
+
+    fileprivate func free() {
+        lock = 0
+    }
+
+    fileprivate func loop() {
+        lock -= 1
+    }
 }
 
 extension Optional where Wrapped == LightInfo {
@@ -40,3 +132,46 @@ extension Optional where Wrapped == LightInfo {
         return (buffer, lights.count)
     }
 }
+
+extension LightInfo {
+//    func toArrayShadows(for device: MTLDevice) throws -> MTLTexture? {
+//        guard !shadows.isEmpty else {
+//            return nil
+//        }
+//        let depthTextureDescriptor = MTLTextureDescriptor.texture2DDescriptor(
+//            pixelFormat: .depth32Float,
+//            width: Int(shadowSize.width),
+//            height: Int(shadowSize.height),
+//            mipmapped: false
+//        )
+//        depthTextureDescriptor.usage = [.renderTarget, .shaderRead, .shaderWrite, .pixelFormatView]
+//        depthTextureDescriptor.textureType = .type2DArray
+//        depthTextureDescriptor.storageMode = .private
+//        depthTextureDescriptor.arrayLength = 5
+//        depthTextureDescriptor.resourceOptions = [.storageModePrivate]
+////        let depthTexture = device.makeTexture(descriptor: depthTextureDescriptor)
+////        let height = Int(shadowSize.height)
+////        let width = Int(shadowSize.width)
+////        for container in shadows.enumerated() {
+////            guard let texture = container.element.getMLTexture(device: device) else {
+////                continue
+////            }
+////            let data = UnsafeMutableRawPointer.allocate(bytes: bytesPerRow * height, alignedTo: 4)
+////            defer {
+////                data.deallocate(bytes: bytesPerRow * height, alignedTo: 4)
+////            }
+////            texture.getBytes(UnsafeMutableRawPointer, bytesPerRow: <#T##Int#>, from: <#T##MTLRegion#>, mipmapLevel: <#T##Int#>)
+////            depthTexture?.replace(
+////                region: .init(
+////                    origin: .init(x: 0, y: 0, z: 0),
+////                    size: .init(width: shadowSize.width, height: shadowSize.height, depth: 1)
+////                ),
+////                mipmapLevel: 0,
+////                withBytes: texture.getMLTexture(device: device).,
+////                bytesPerRow: shadowSize.width * 4
+////            )
+////        }
+//    }
+}
+
+

@@ -40,14 +40,14 @@ public final class Sprite3DInput: ProjectionChangable, PositionChangable, LightI
     var positionMatrix: matrix_float4x4 = .init(1)
     var lightInfo: LightInfo?
 
-    public var texture: Texture?
+    public var texture: ITexture?
     public let bones = OptionalBufferContainer<matrix_float4x4>(.init(1))
 
     public let vertexIndexs = OptionalBufferContainer<UInt32>(0)
     public let vertexs = BufferContainer<VertexInput>()
 
     public init(
-        texture: Texture?,
+        texture: ITexture?,
         projectionMatrix: matrix_float4x4 = .init(1),
         vertexs: [VertexInput]
     ) {
@@ -73,9 +73,8 @@ extension Sprite3DInput: MetalInputRenderEncodable {
     }
 
     func renderEncode(_ encoder: MTLRenderCommandEncoder, device: MTLDevice) throws {
-        guard let texture = self.texture?.getMLTexture(device: device) else {
-            return
-        }
+        let texture = self.texture?.getMLTexture(device: device)
+
         let light = try? lightInfo.getBuffer(for: device)
         let input = try vertexs.getBuffer(with: device)
 
@@ -88,6 +87,7 @@ extension Sprite3DInput: MetalInputRenderEncodable {
         var bounesCount: Int32 = Int32(bones.count)
         encoder.setVertexBytes(&bounesCount, length: MemoryLayout<Int32>.stride, index: 4)
 
+
         // Fragment
         var count: Int32 = Int32(light?.1 ?? 0)
         if let light = light?.0 {
@@ -95,6 +95,9 @@ extension Sprite3DInput: MetalInputRenderEncodable {
         } else {
             var light = LightInfo.Light(position: .zero, color: .zero, power: 0)
             encoder.setFragmentBytes(&light, length: MemoryLayout<LightInfo.Light>.stride, index: 0)
+        }
+        if let lightInfo = lightInfo {
+            encoder.setFragmentTexture(lightInfo.shadowMapTexture?.getMLTexture(device: device), index: 1)
         }
         encoder.setFragmentBytes(&count, length: MemoryLayout<Int32>.stride, index: 1)
         encoder.setFragmentTexture(texture, index: 0)

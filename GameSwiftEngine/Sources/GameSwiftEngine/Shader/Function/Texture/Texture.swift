@@ -2,10 +2,10 @@ import Foundation
 import UIKit
 import MetalKit
 
-public final class Texture {
+public final class Texture: ITexture {
     let data: [UInt8]
-    let width: Int
-    let height: Int
+    public let width: Int
+    public let height: Int
 
     public init(data: [UInt8], width: Int, height: Int) {
         self.data = data
@@ -16,6 +16,12 @@ public final class Texture {
     /// METAL
 
     private var mlTexture = MLTextureCache()
+
+    public func getMLTexture(
+        device: MTLDevice
+    ) -> MTLTexture? {
+        mlTexture.getMLTexture(texture: self, device: device, pixelFormat: .bgra8Unorm_srgb)
+    }
 
     func getMLTexture(
         device: MTLDevice,

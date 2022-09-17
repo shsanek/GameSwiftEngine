@@ -8,7 +8,7 @@ open class SceeneNode: Node {
     }
 
     public var mainCamera = CameraNode()
-    public private(set) var camers: [CameraNode] = []
+    public internal(set) var camers: [CameraNode] = []
 
     public override init() {
         super.init()

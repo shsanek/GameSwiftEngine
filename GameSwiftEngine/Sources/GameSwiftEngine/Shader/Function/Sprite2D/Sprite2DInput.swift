@@ -10,12 +10,12 @@ public final class Sprite2DInput: ScreenSizeChangable {
     var renderSize: vector_uint2
 
     public var points: [Point]
-    public var texture: Texture
+    public var texture: ITexture
 
     private let uvMetalBufferCache = MetalBufferCache()
     private let positionCache = MetalBufferCache()
 
-    public init(renderSize: vector_uint2 = .zero, texture: Texture, points: [Point]) {
+    public init(renderSize: vector_uint2 = .zero, texture: ITexture, points: [Point]) {
         self.renderSize = renderSize
         self.texture = texture
         self.points = points

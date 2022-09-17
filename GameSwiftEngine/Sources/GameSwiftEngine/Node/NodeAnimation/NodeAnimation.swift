@@ -154,7 +154,6 @@ extension NodeAnimation {
                     if progress > fullProgress {
                         progress -= fullProgress
                     } else {
-                        let currentProgress = progress / fullProgress
                         if context?.offset != animation.offset {
                             context?.controller.stop(.saveProgress)
                             let controller = animation.element.makeController(for: node) { _, _ in

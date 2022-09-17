@@ -10,4 +10,12 @@ struct MetalRenderInput {
     var projectionMatrix: matrix_float4x4
     var currentPosition: matrix_float4x4 = .init(1)
     var lightInfo: LightInfo?
+
+    var renderType: RenderType
+
+    enum RenderType {
+        case mainRender
+        case shadowRender
+        case customRender
+    }
 }

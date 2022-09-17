@@ -38,17 +38,15 @@ class DoorNode: Node, INodeActive {
             ]
         )
         addRenderInputs(encoder)
-//        let light = LightNode()
-//        light.power = 0.5
-//        light.color = .init(x: 1, y: 1, z: 1)
-//        light.step = 1
-//        light.angle = nil
-//        light.move(to: .init(x: 0, y: -0.5, z: 0))
-//        light.attenuationAngle = nil
-//        addSubnode(light)
 
         addCollision(y: z, angle: 0)
         addCollision(y: -z, angle: -.pi)
+
+        let light = LightNode()
+        light.power = 0.05
+        light.color = .init(x: 1, y: 0, z: 0)
+        addSubnode(light)
+        light.move(to: .init(0, 0.5, 0))
     }
 
     

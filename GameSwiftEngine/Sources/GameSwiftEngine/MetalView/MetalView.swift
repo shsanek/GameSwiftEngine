@@ -14,7 +14,6 @@ public class MetalView: MTKView, MTKViewDelegate {
         controller = LoopController(device: defaultDevice)
         colorPixelFormat = .bgra8Unorm_srgb
         depthStencilPixelFormat = .depth32Float
-        clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
         clearDepth = 1
         self.delegate = self
     }

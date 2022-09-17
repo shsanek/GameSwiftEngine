@@ -1,4 +1,4 @@
-public struct Size {
+public struct Size: Hashable {
     public let width: Float32
     public let height: Float32
 

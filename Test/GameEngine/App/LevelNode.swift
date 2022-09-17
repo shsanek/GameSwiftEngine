@@ -8,6 +8,7 @@ class LevelNode: Node {
         case wall = "w"
         case lift = "l"
         case zombee = "z"
+        case mirror = "m"
     }
 
     enum MapTitle {
@@ -60,7 +61,16 @@ class LevelNode: Node {
             return lift(for: x, y: y, map: map)
         case .zombee:
             return zombee(for: x, y: y, map: map)
+        case .mirror:
+            return mirror(for: x, y: y, map: map)
         }
+    }
+
+    private func mirror(for x: Int, y: Int, map: [[RawMapTitle]]) -> MapTitle {
+        let node = MirrorNode()
+        node.move(to: .init(Float(x), 0, Float(y)))
+        addSubnode(node)
+        return empty(for: x, y: y, map: map)
     }
 
     private func zombee(for x: Int, y: Int, map: [[RawMapTitle]]) -> MapTitle {

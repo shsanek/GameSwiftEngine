@@ -10,7 +10,7 @@ final class ZombeeNode: Node {
         guard let object = InterQuakeImporter.loadFile("zombee") else {
             return
         }
-        let node = Object3DNode(object: object, texture: Texture.load(in: "TECH_0F"))
+        let node = Object3DNode(object: object, texture: Texture.load(in: "SUPPORT_7C"))
         var animation = NodeAnimation.updateFrames((0..<node.frameCount).map { $0 })
         animation.duration = 3
         animation.animationFunction = .default
@@ -18,7 +18,13 @@ final class ZombeeNode: Node {
         addSubnode(node)
         node.addAnimation(animation)
         node.scale(to: .init(0.1, 0.1, 0.1))
-        node.move(to: .init(7, -0.5, 2))
+        node.move(to: .init(0, -0.5, 0))
         node.rotate(on: -.pi/2, axis: .init(1, 0, 0))
+        node.rotate(on: .pi, axis: .init(0, 1, 0))
+
+        let light = LightNode()
+        light.color = .init(0, 1, 0)
+        light.power = 0.01
+        //addSubnode(light)
     }
 }

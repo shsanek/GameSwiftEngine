@@ -28,7 +28,9 @@ class PlayerNode: Node {
         light.attenuationAngle = .pi / 16
         light.power = 3
         light.color = .one
-        addSubnode(light)
+        light.move(to: .init(0.05, -0.3, 0))
+        light.isShadow = true
+        //camera.addSubnode(light)
     }
 
     override func loop(_ time: Double, size: Size) throws {

@@ -29,9 +29,10 @@ public final class LoopController {
         node.lightController.calculatePosition()
         for camera in node.camers {
             if camera.isActive && camera !== node.mainCamera {
-                //bla bla
+                try renderInTexture(for: camera)
             }
         }
+        node.lightController.lightInfo.buffer = nil
         try updateHandler?(Double(delta))
     }
 
@@ -41,7 +42,34 @@ public final class LoopController {
         return self
     }
 
+    func renderInTexture(for camera: CameraNode) throws {
+        let info = camera.renderInfo
+        let size: Size = info.size
+
+        let texture = info.colorInfo.color?.getMLTexture(device: device)
+        let depthTexture = info.depthInfo.depth?.getMLTexture(device: device)
+
+        let depthAttachementTexureDescriptor = MTLRenderPassDepthAttachmentDescriptor()
+        depthAttachementTexureDescriptor.clearDepth = 1.0
+        depthAttachementTexureDescriptor.loadAction = .dontCare
+        depthAttachementTexureDescriptor.storeAction = .store
+        depthAttachementTexureDescriptor.texture = depthTexture
+        depthAttachementTexureDescriptor.slice = info.depthInfo.arrayIndex
+
+        let descriptor = MTLRenderPassDescriptor()
+        descriptor.colorAttachments[0].texture = texture
+        descriptor.colorAttachments[0].resolveTexture = nil
+        descriptor.colorAttachments[0].storeAction = .store
+        descriptor.colorAttachments[0].slice = info.colorInfo.arrayIndex
+        descriptor.depthAttachment = depthAttachementTexureDescriptor
+
+        try metalRender(camera: camera, descriptor: descriptor, drawable: nil, size: size)
+
+        camera.didRender()
+    }
+
     func metalRender(
+        camera: CameraNode? = nil,
         descriptor: MTLRenderPassDescriptor,
         drawable: CAMetalDrawable?,
         size: Size
@@ -49,6 +77,9 @@ public final class LoopController {
         let depthDescriptor = MTLDepthStencilDescriptor()
         depthDescriptor.depthCompareFunction = .lessEqual
         depthDescriptor.isDepthWriteEnabled = true
+
+        descriptor.colorAttachments[0].loadAction = .clear
+        descriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
 
         guard
             let commandQueue = commandQueue,
@@ -59,9 +90,9 @@ public final class LoopController {
         else {
             return
         }
+        let camera = camera ?? node.mainCamera
 
         encoder.setDepthStencilState(depthState)
-        descriptor.colorAttachments[0].loadAction = .clear
 
         buffer.label = UUID().uuidString
 
@@ -73,17 +104,18 @@ public final class LoopController {
             encoder: encoder,
             size: .init(x: Float(size.width), y: Float(size.height)),
             projectionMatrix: perspectiveMatrix(aspectRatio: Float(size.width / size.height)),
-            lightInfo: node.lightController.lightInfo
+            lightInfo: node.lightController.lightInfo,
+            renderType: camera === node.mainCamera ? .mainRender : .shadowRender
         )
 
         var outputError: Error?
         do {
             let cameraMatrix = matrix_multiply(
-                node.mainCamera.projectionMatrix,
-                node.mainCamera.absoluteTransform.inverse
+                camera.projectionMatrix,
+                camera.absoluteTransform.inverse
             )
             try Node.metalLoop(
-                camera: node.mainCamera,
+                camera: camera,
                 node: node,
                 cameraMatrix: cameraMatrix,
                 with: &functions,
@@ -105,4 +137,3 @@ public final class LoopController {
         }
     }
 }
-

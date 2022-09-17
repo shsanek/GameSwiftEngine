@@ -16,11 +16,14 @@ final class MainNode: SceeneNode {
         addSubnode(player)
 
         let light = LightNode()
-        light.power = 10
-        light.color = .init(x: 1, y: 1, z: 1)
-        light.step = nil
         light.angle = .pi / 8
-        light.attenuationAngle = .pi / 32
+        light.attenuationAngle = .pi / 16
+        light.power = 3
+        light.color = .one
+        light.move(to: .init(-7, -0.33333334, -10))
+        light.rotate(to: -.pi, axis: .init(0, 1, 0))
+        light.isShadow = true
+        self.addSubnode(light)
 
         let level = LevelNode(text: testMap)
         level.rotate(to: .pi, axis: .init(x: 0, y: 1, z: 0))
@@ -49,7 +52,7 @@ weeeeeeeeeeedlweew
 wwwwwwwdwwwwwwwwww
 weeeeeeeeeeeeeeeew
 weeeeeeeeeeeeeeeew
-weeeeeezeeeeeeeeew
+weeeeeezeeemeeeeew
 weeeeeeeeeeeeeeeew
 wwwwwwwwwwwwwwwwww
 """
