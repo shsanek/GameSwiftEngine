@@ -10,3 +10,6 @@ Models format:  `OBJ`, `IQE`
 ### Example scren
 
 ![image](/Screen/1.png)
+
+## Demo
+Unfortunately you will have to use your resources to run the demo
