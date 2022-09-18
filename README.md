@@ -17,24 +17,17 @@ Unfortunately you will have to use your resources to run the demo
 
 ## Fast instruction
 
-
-#### Step0 SMP
-
 Added SMP
 
 ```
     .package(url: "https://github.com/shsanek/GameSwiftEngine.git", branch: "main")
 ``` 
 
-#### Step0 Import
-
 Added import
 
 ```
 import GameSwiftEngine
 ```
-
-#### Step1 MetalView
 
 Create `MetalView`
 
@@ -56,16 +49,12 @@ SwiftUIView {
 }
 ```
 
-#### Step2 Sceene 
-
 Сreate a `SceneNode` and attach it to the loop in you MetalView
 
 ```
 let sceneNode = SceneNode()
 metalView.controller.node = sceneNode
 ```
-
-#### Step3 Object
 
 Use base node for to fill the stage scene
 
