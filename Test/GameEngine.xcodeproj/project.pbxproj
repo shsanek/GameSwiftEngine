@@ -28,6 +28,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		E86CB41828D765FF009F1E50 /* GameSwiftEngine */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = GameSwiftEngine; path = ..; sourceTree = "<group>"; };
 		E87A4BA728D0E35700738214 /* DoorNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoorNode.swift; sourceTree = "<group>"; };
 		E87A4BA928D0E37500738214 /* RectModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RectModel.swift; sourceTree = "<group>"; };
 		E87A4BAB28D0E39000738214 /* LevelNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelNode.swift; sourceTree = "<group>"; };
@@ -35,7 +36,6 @@
 		E89E43B528D2725B003E6B6D /* ActiveContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveContainer.swift; sourceTree = "<group>"; };
 		E89E43B828D32FD9003E6B6D /* LiftNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiftNode.swift; sourceTree = "<group>"; };
 		E89E43BD28D38854003E6B6D /* zombee.iqe */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = zombee.iqe; sourceTree = "<group>"; };
-		E8A6E46C28D54E310083D435 /* GameSwiftEngine */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = GameSwiftEngine; path = ../GameSwiftEngine; sourceTree = "<group>"; };
 		E8B4AD1728D4D6E500A21454 /* PlayerMoveControllerAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerMoveControllerAnimation.swift; sourceTree = "<group>"; };
 		E8B4AD1E28D5304300A21454 /* ZombeeNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZombeeNode.swift; sourceTree = "<group>"; };
 		E8E46C8F28D098940035FEEC /* MainNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainNode.swift; sourceTree = "<group>"; };
@@ -61,6 +61,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		E86CB41728D765FF009F1E50 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				E86CB41828D765FF009F1E50 /* GameSwiftEngine */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
 		E87A4BA628D0E34C00738214 /* App */ = {
 			isa = PBXGroup;
 			children = (
@@ -120,8 +128,8 @@
 		E8E561DE28CF4AE400B2839B = {
 			isa = PBXGroup;
 			children = (
+				E86CB41728D765FF009F1E50 /* Packages */,
 				E8E561E928CF4AE400B2839B /* GameEngine */,
-				E8A6E46C28D54E310083D435 /* GameSwiftEngine */,
 				E8E561E828CF4AE400B2839B /* Products */,
 				E8B4AD2328D5490800A21454 /* Frameworks */,
 			);
