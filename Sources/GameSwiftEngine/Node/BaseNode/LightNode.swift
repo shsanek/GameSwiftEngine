@@ -7,6 +7,7 @@ public final class LightNode: Node, CameraNodeDelegate {
     private let camera: CameraNode = CameraNode()
 
     /// Active dynamic shadow, Only 5 dynamic shadows can be active at the same time
+    ///  work with angle < .pi
     public var isShadow: Bool = false {
         didSet {
             if isShadow == oldValue {
