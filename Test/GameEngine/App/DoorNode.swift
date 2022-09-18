@@ -14,9 +14,9 @@ class DoorNode: Node, INodeActive {
     init(texture: Texture? = Texture.load(in: "1")) {
         self.texture = texture
         super.init()
-        let x: Float = 0.5
-        let y: Float = 0.5
-        let z: Float = 0.1
+        let x: GEFloat = 0.5
+        let y: GEFloat = 0.5
+        let z: GEFloat = 0.1
         let encoder = Sprite3DInput(
             texture: texture,
             vertexs: [
@@ -53,16 +53,16 @@ class DoorNode: Node, INodeActive {
 
     override func loop(_ time: Double, size: Size) throws {
         try super.loop(time, size: size)
-        lockUpdateCordinate {
+        voxelElementController.lockNeedUpdate {
             let speed: Double = 1
             if localPosition.x < 1 && state == .open {
-                move(on: .init(x: Float(speed * time), y: 0, z: 0))
+                move(on: .init(x: GEFloat(speed * time), y: 0, z: 0))
             }
             if state == .open && localPosition.x > 1 {
                 move(to: .init(x: 1, y: 0, z: 0))
             }
             if localPosition.x > 0 && state == .close {
-                move(on: .init(x: -Float(speed * time), y: 0, z: 0))
+                move(on: .init(x: -GEFloat(speed * time), y: 0, z: 0))
             }
             if state == .close && localPosition.x < 0 {
                 move(to: .init(x: 0, y: 0, z: 0))

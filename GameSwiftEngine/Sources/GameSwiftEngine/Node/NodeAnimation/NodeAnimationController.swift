@@ -6,25 +6,25 @@ public final class NodeAnimationController {
     }
 
     public let tag: String?
-    var progress: Float {
+    var progress: GEFloat {
         currentTime / duration
     }
 
-    var functionProgress: Float {
+    var functionProgress: GEFloat {
         animationFunction.function(progress)
     }
 
-    public var speed: Float = 1
+    public var speed: GEFloat = 1
 
     private let completion: ((Bool, StopAction) -> Void)?
 
-    private let animation: (Node, Float) throws -> Void
+    private let animation: (Node, GEFloat) throws -> Void
     private let animationFunction: AnimationFunction
     private weak var node: Node?
     private var startHandler: ((Node) -> Void)?
 
-    private let duration: Float
-    private var currentTime: Float = 0
+    private let duration: GEFloat
+    private var currentTime: GEFloat = 0
     private var repeatCount: Int
 
     private var isPaused: Bool = true
@@ -32,7 +32,7 @@ public final class NodeAnimationController {
     init(
         tag: String? = nil,
         node: Node,
-        duration: Float,
+        duration: GEFloat,
         repeatCount: Int,
         animationFunction: AnimationFunction,
         animationHandler: IAnimationHandler,
@@ -60,13 +60,13 @@ public final class NodeAnimationController {
         self.stop(isFinish: false, stopAction)
     }
 
-    func loop(_ deltaTime: Float) {
+    func loop(_ deltaTime: GEFloat) {
         guard isPaused == false else { return }
         currentTime += deltaTime * speed
         loop()
     }
 
-    func setCurrentTime(_ time: Float) {
+    func setCurrentTime(_ time: GEFloat) {
         currentTime = time
     }
 
@@ -86,7 +86,7 @@ public final class NodeAnimationController {
                     return
                 }
             }
-            currentTime = currentTime - Float(Int(currentTime / duration)) * duration
+            currentTime = currentTime - GEFloat(Int(currentTime / duration)) * duration
             loop()
         } else {
             try? animation(node, functionProgress)

@@ -19,16 +19,16 @@ final class GameState {
             if let triger = self?.controlState.leftTriger {
                 self?.node.player?.movePlayer(
                     .init(
-                        x: Float(triger.x * time),
-                        y: Float(triger.y * time)
+                        x: GEFloat(triger.x * time),
+                        y: GEFloat(triger.y * time)
                     )
                 )
             }
             if let triger = self?.controlState.rightTriger {
                 self?.node.player?.rotatePlayer(
                     .init(
-                        x: Float(triger.x * time),
-                        y: Float(triger.y * time)
+                        x: GEFloat(triger.x * time),
+                        y: GEFloat(triger.y * time)
                     )
                 )
             }

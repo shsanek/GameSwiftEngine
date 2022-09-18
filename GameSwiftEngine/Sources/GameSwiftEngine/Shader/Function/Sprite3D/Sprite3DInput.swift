@@ -16,13 +16,13 @@ enum Matireal {
 public final class Sprite3DInput: ProjectionChangable, PositionChangable, LightInfoChangable {
     public struct InputBoneBind {
         public var index: Int32
-        public var width: Float32
+        public var width: GEFloat
 
         public static var empty: Self {
             .init(index: -1, width: 0)
         }
 
-        public init(index: Int32, width: Float32) {
+        public init(index: Int32, width: GEFloat) {
             self.index = index
             self.width = width
         }

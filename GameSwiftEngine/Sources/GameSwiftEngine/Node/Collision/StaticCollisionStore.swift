@@ -1,131 +1,61 @@
 import simd
 
-struct MapCordinate: Hashable {
-    let x: Int
-    let y: Int
-}
-
 final class CollisionController {
+    private let voxelSystem: VoxelsSystemController
 
-    private(set) var staticProviders: [MapCordinate?: [StaticCollisionProvider]] = [:]
-    private(set) var dynamicProviders: [DynamicCollisionProvider] = []
+    init(voxelSystem: VoxelsSystemController) {
+        self.voxelSystem = voxelSystem
+    }
 
-    func addProvider(
-        _ provider: StaticCollisionProvider,
-        in MapCordinate: MapCordinate? = nil
+    func loop() {
+        let group = voxelSystem.getGroup(for: .dynamicCollisionElement)
+        for container in group.containers {
+            proccese(for: container.value, group: group)
+        }
+    }
+
+    private func proccese(
+        for node: Node,
+        group: UnvoxelGroup
     ) {
-        if staticProviders[MapCordinate] == nil {
-            staticProviders[MapCordinate] = []
+        var positionA = node.position.to4
+        for container in group.containers {
+            procceseDynamicCollision(nodeA: node, nodeB: container.value, positionA: &positionA)
         }
-        staticProviders[MapCordinate]?.append(provider)
-        provider.isActive = true
-    }
-
-    func removeProvider(_ provider: StaticCollisionProvider) {
-        for key in staticProviders.keys {
-            staticProviders[key]?.removeAll(where: { $0 === provider })
-        }
-        provider.isActive = false
-    }
-
-    func addProvider(
-        _ provider: DynamicCollisionProvider
-    ) {
-        dynamicProviders.append(provider)
-        provider.isActive = true
-    }
-
-    func removeProvider(
-        _ provider: DynamicCollisionProvider
-    ) {
-        dynamicProviders.removeAll(where: { $0 === provider })
-        provider.isActive = false
-    }
-
-    func update() {
-        for container in staticProviders {
-            for provider in container.value {
-                provider.node?.updateStaticCollisionMapCordinateIfNeeded()
-            }
-        }
-        for provider in dynamicProviders {
-            proccesedProvider(provider)
-        }
-    }
-
-    private func proccesedProvider(
-        _ current: DynamicCollisionProvider
-    ) {
-        guard let node = current.node, let radiusA = node.dynamicCollisionRadius else {
-            return
-        }
-        var positionA = matrix_multiply(node.absoluteTransform, .init(0, 0, 0, 1))
-        for provider in dynamicProviders {
-            guard provider !== current, let currentNode = provider.node  else {
-                continue
-            }
-            guard let radiusB = currentNode.dynamicCollisionRadius else {
-                continue
-            }
-            let positionB = matrix_multiply(currentNode.absoluteTransform, .init(0, 0, 0, 1))
-            let delta = positionA - positionB
-            let move = (length(delta) - (radiusB + radiusA)) / 2
-            guard move < 0 else {
-                continue
-            }
-            let norm = normalize(delta)
-
-            let vectoreMove = norm * move
-            positionA += vectoreMove
-            node.move(on: .init(x: vectoreMove.x, y: vectoreMove.y, z: vectoreMove.z))
-            currentNode.move(on: .init(x: -vectoreMove.x, y: -vectoreMove.y, z: -vectoreMove.z))
-        }
-        let staticMove = getStaticAntiCollisionVector(
-            for: positionA,
-            radius: radiusA,
-            transfrom: node.absoluteTransform
+        procceseStaticCollision(
+            position: positionA,
+            dynamicNode: node
         )
-        if let position = staticMove {
-            let delta = position - positionA
-            node.move(on: .init(x: delta.x, y: delta.y, z: delta.z))
-        }
     }
 
-    private func getStaticAntiCollisionVector(
-        for position: vector_float4,
-        radius: Float,
-        transfrom: matrix_float4x4
-    ) -> vector_float4? {
-        let baseRasius = radius
-        let radius = radius + 1
-        var providers = [ObjectIdentifier: StaticCollisionProvider]()
+    private func procceseStaticCollision(
+        position: vector_float4,
+        dynamicNode: Node
+    ) {
+        var elements = [ObjectIdentifier: Node]()
 
-        let positionX = Int(position.x)
-        let positionY = Int(position.z)
-
-        for i in Int(-radius)...Int(radius) {
-            for j in Int(-radius)...Int(radius) {
-                for provider in self.staticProviders[.init(x: positionX + i, y: positionY + j)] ?? [] {
-                    providers[ObjectIdentifier(provider)] = provider
+        let radius = dynamicNode.dynamicCollisionElement.radius
+        voxelSystem.forEachVoxels(
+            in: .init(vector: position.xyz),
+            radius: radius
+        ) { voxel in
+            for container in voxel.containers {
+                guard container.value.staticCollisionElement.isActive else {
+                    return
                 }
+                elements[container.key] = container.value
             }
-        }
-        for provider in self.staticProviders[nil] ?? [] {
-            providers[ObjectIdentifier(provider)] = provider
         }
 
         var result = position
         var update = false
-        for provider in providers {
-            guard let node = provider.value.node else {
-                continue
-            }
-            for plane in provider.value.planes {
+        for element in elements {
+            for plane in element.value.staticCollisionElement.planes {
                 let vector = absalutePositionColisionInPlane(
                     position: result,
-                    radius: baseRasius,
+                    radius: radius,
                     planeSize: plane.size,
-                    planeTransform: matrix_multiply(node.absoluteTransform, plane.transform)
+                    planeTransform: matrix_multiply(element.value.absoluteTransform, plane.transform)
                 )
                 if let vector = vector {
                     result = vector
@@ -133,9 +63,50 @@ final class CollisionController {
                 }
             }
         }
-        if update {
-            return result
+        guard update else {
+            return
         }
-        return nil
+        let delta = result - position
+        dynamicNode.move(on: .init(x: delta.x, y: delta.y, z: delta.z))
+    }
+
+    private func procceseDynamicCollision(
+        nodeA: Node,
+        nodeB: Node,
+        positionA: inout vector_float4
+    ) {
+        guard nodeA !== nodeB else {
+            return
+        }
+        let radiusA = nodeA.dynamicCollisionElement.radius
+        let radiusB = nodeB.dynamicCollisionElement.radius
+
+        let vectoreMove = calculateDynamicVectoreMove(
+            positionA: positionA,
+            positionB: nodeB.position.to4,
+            radiusA: radiusA,
+            radiusB: radiusB
+        )
+        positionA += vectoreMove.to4
+
+        nodeA.move(on: vectoreMove)
+        nodeB.move(on: -vectoreMove)
+    }
+
+    private func calculateDynamicVectoreMove(
+        positionA: vector_float4,
+        positionB: vector_float4,
+        radiusA: GEFloat,
+        radiusB: GEFloat
+    ) -> vector_float3 {
+        let delta = positionA - positionB
+        let move = (length(delta) - (radiusB + radiusA)) / 2
+        guard move < 0 else {
+            return .zero
+        }
+        let norm = normalize(delta)
+        let vectoreMove = norm * move
+
+        return vectoreMove.xyz
     }
 }

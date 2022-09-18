@@ -9,9 +9,9 @@ public final class MirrorNode: Node, CameraNodeDelegate {
     private var enableCounter: Int = 0
 
     public override init() {
-        let x: Float = 0.5
-        let y: Float = 0.5
-        let z: Float = 0
+        let x: GEFloat = 0.5
+        let y: GEFloat = 0.5
+        let z: GEFloat = 0
         self.planeInput = Sprite3DInput(
             texture: nil,
             vertexs: [

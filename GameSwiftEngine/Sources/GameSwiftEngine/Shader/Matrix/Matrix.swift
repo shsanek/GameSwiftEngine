@@ -1,10 +1,10 @@
 import simd
 
 public func perspectiveMatrix(
-    fovyRadians fovy: Float = 65 * 3.141_592 / 180.0,
-    aspectRatio: Float,
-    nearZ: Float = 0.1,
-    farZ: Float = 100
+    fovyRadians fovy: GEFloat = 65 * 3.141_592 / 180.0,
+    aspectRatio: GEFloat,
+    nearZ: GEFloat = 0.1,
+    farZ: GEFloat = 100
 ) -> matrix_float4x4 {
     let yScale = 1 / tanf(fovy * 0.5)
     let xScale = yScale / aspectRatio
@@ -20,7 +20,7 @@ public func perspectiveMatrix(
 }
 
 /// Provides a rotation matrix using the SIMD library.
-public func rotationMatrix4x4(radians: Float, axis: vector_float3) -> matrix_float4x4 {
+public func rotationMatrix4x4(radians: GEFloat, axis: vector_float3) -> matrix_float4x4 {
     let unitAxis = normalize(axis)
     let cosTheta = cosf(radians)
     let sinTheta = sinf(radians)
@@ -47,7 +47,7 @@ public func rotationMatrix4x4(radians: Float, axis: vector_float3) -> matrix_flo
 }
 
 /// Provides a translation matrix using the SIMD library.
-public func translationMatrix4x4(_ translationX: Float, _ translationY: Float, _ translationZ: Float) -> matrix_float4x4 {
+public func translationMatrix4x4(_ translationX: GEFloat, _ translationY: GEFloat, _ translationZ: GEFloat) -> matrix_float4x4 {
     return matrix_float4x4(
         columns: (
             vector_float4(1, 0, 0, 0),
@@ -60,7 +60,7 @@ public func translationMatrix4x4(_ translationX: Float, _ translationY: Float, _
 
 func absalutePositionColisionInPlane(
     position: vector_float4,
-    radius: Float = 1,
+    radius: GEFloat = 1,
     planeSize: vector_float2 = .one,
     planeTransform: matrix_float4x4 // default plane in z x
 ) -> vector_float4? {

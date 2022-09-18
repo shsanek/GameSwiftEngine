@@ -4,7 +4,7 @@ protocol INodeActive: Node {
     func action()
 }
 
-class ActiveContainer: Node, INodeActivable {
+class ActiveContainer: Node, IPlayerActiveble {
     let node: INodeActive
 
     init(node: INodeActive) {
@@ -13,7 +13,7 @@ class ActiveContainer: Node, INodeActivable {
         addSubnode(node)
     }
 
-    func active() {
+    func action(_ player: PlayerNode) {
         node.action()
     }
 }

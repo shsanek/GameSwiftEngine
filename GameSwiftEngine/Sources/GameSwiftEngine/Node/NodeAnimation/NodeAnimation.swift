@@ -1,22 +1,22 @@
 public struct NodeAnimation {
     public var tag: String? = nil
-    public var duration: Float = 1
+    public var duration: GEFloat = 1
     public var repeatCount: Int = 1
     public var animationFunction: AnimationFunction = .default
     public let animationMaker: (Node) -> IAnimationHandler
 }
 
 public protocol IAnimationHandler {
-    func updateAnimation(_ node: Node, with progress: Float) throws
+    func updateAnimation(_ node: Node, with progress: GEFloat) throws
     func prepareAnimation(_ node: Node)
 }
 
 public struct AnimationHandler<NodeType: Node>: IAnimationHandler  {
-    let updateHandler: (NodeType, Float) throws -> Void
+    let updateHandler: (NodeType, GEFloat) throws -> Void
     var prepareHandler: (NodeType) -> Void
 
     public init(
-        updateHandler: @escaping (NodeType, Float) throws -> Void,
+        updateHandler: @escaping (NodeType, GEFloat) throws -> Void,
         prepareHandler: @escaping (NodeType) -> Void
     ) {
         self.updateHandler = updateHandler
@@ -24,7 +24,7 @@ public struct AnimationHandler<NodeType: Node>: IAnimationHandler  {
     }
 
 
-    public func updateAnimation(_ node: Node, with progress: Float) throws {
+    public func updateAnimation(_ node: Node, with progress: GEFloat) throws {
         guard let node = node as? NodeType else { return }
         try updateHandler(node, progress)
     }
@@ -36,7 +36,7 @@ public struct AnimationHandler<NodeType: Node>: IAnimationHandler  {
 }
 
 extension AnimationHandler where NodeType == Node {
-    public init(_ block: @escaping (Node, Float) throws -> Void) {
+    public init(_ block: @escaping (Node, GEFloat) throws -> Void) {
         self.init(updateHandler: block, prepareHandler: { _ in })
     }
 }
@@ -66,7 +66,7 @@ extension NodeAnimation {
         .init(animationMaker: { _ in return AnimationHandler { _, _ in }})
     }
 
-    public static func move(to position: @escaping (Float) -> vector_float3) -> NodeAnimation {
+    public static func move(to position: @escaping (GEFloat) -> vector_float3) -> NodeAnimation {
         .init { node in
             return AnimationHandler { node, progress in
                 node.move(to: position(progress))
@@ -138,7 +138,7 @@ extension NodeAnimation {
     }
 
     public static func sequence(to animations: [NodeAnimation]) -> NodeAnimation {
-        let fullDuration: Float = animations.reduce(Float(0), { $0 + $1.duration })
+        let fullDuration: GEFloat = animations.reduce(GEFloat(0), { $0 + $1.duration })
         let animations: [NodeAnimation] = animations.map {
             var animation = $0
             animation.duration = $0.duration / fullDuration

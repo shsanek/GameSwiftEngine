@@ -160,8 +160,8 @@ public final class InterQuakeImporter {
         return result
     }
 
-    private func floatParameter() -> Float? {
-        guard let content = rows.first?.first, let result = Float(content) else {
+    private func floatParameter() -> GEFloat? {
+        guard let content = rows.first?.first, let result = GEFloat(content) else {
             return nil
         }
         removeParameters()

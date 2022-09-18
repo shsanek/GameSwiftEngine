@@ -1,9 +1,13 @@
 import simd
 import GameSwiftEngine
 
+protocol IPlayerActiveble: Node {
+    func action(_ player: PlayerNode)
+}
+
 class PlayerNode: Node {
-    var moveSpeed: Float = 2
-    var rotateSpeed: Float = Float.pi / 4
+    var moveSpeed: GEFloat = 2
+    var rotateSpeed: GEFloat = GEFloat.pi / 4
 
     let camera: CameraNode
 
@@ -21,7 +25,9 @@ class PlayerNode: Node {
 
         addSubnode(container)
         container.addSubnode(camera)
-        self.dynamicCollisionRadius = 0.5
+
+        dynamicCollisionElement.isActive = true
+        dynamicCollisionElement.radius = 0.5
 
         let light = LightNode()
         light.angle = .pi / 8
@@ -42,7 +48,7 @@ class PlayerNode: Node {
 
     override func loop(_ time: Double, size: Size) throws {
         try? super.loop(time, size: size)
-        gravitationController.update(with: Float(time))
+        gravitationController.update(with: GEFloat(time))
         updateMoveAnimation()
     }
 
@@ -52,7 +58,7 @@ class PlayerNode: Node {
     }
 
     func action() {
-        activables().first?.active()
+        (getNodesWithDirection().first(where: { $0 is IPlayerActiveble }) as? IPlayerActiveble)?.action(self)
     }
 
     func movePlayer(_ value: vector_float2) {

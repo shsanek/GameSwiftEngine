@@ -1,7 +1,7 @@
 open class SceeneNode: Node {
     let lightController = LightController()
-    let collisionController = CollisionController()
-    let activableController = NodeActivableController()
+    lazy var collisionController = CollisionController(voxelSystem: voxelsSystemController)
+    public let voxelsSystemController = VoxelsSystemController()
 
     public override var sceene: SceeneNode? {
         self

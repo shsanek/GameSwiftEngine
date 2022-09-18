@@ -5,14 +5,14 @@ final class LightInfo {
     struct Light: RawEncodable {
         var position: vector_float3
         var color: vector_float3 = .one
-        var power: Float = 1
-        var ceilStep: Float = -1
+        var power: GEFloat = 1
+        var ceilStep: GEFloat = -1
         var direction: vector_float3 = .init(x: 0, y: 0, z: 1)
-        var angle: Float = .pi
-        var attenuationAngle: Float = -1
+        var angle: GEFloat = .pi
+        var attenuationAngle: GEFloat = -1
         var shadowProjection: matrix_float4x4 = .init(1)
         var shadowMap: Int32 = -1
-        var shadowShiftZ: Float = 0.1
+        var shadowShiftZ: GEFloat = 0.1
     }
 
     struct LightInfoSetting: Hashable {

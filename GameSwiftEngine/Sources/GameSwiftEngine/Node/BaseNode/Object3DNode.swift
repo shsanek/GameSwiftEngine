@@ -25,7 +25,7 @@ public final class Object3DNode: Node {
 
     private var toBones: [matrix_float4x4] = []
     private var fromBones: [matrix_float4x4] = []
-    private var progress: Float? {
+    private var progress: GEFloat? {
         didSet {
             if oldValue == progress {
                 return
@@ -52,26 +52,26 @@ public final class Object3DNode: Node {
         self.fromBones = self.bones
     }
 
-    func frameTransition(from fromFrame: Int, to toFrame: Int, startProgress: Float = 0) {
+    func frameTransition(from fromFrame: Int, to toFrame: Int, startProgress: GEFloat = 0) {
         self.toBones = object.getBoneTransform(with: toFrame).map { $0.transform }
         self.fromBones = object.getBoneTransform(with: fromFrame).map { $0.transform }
         self.progress = nil
         self.progress = startProgress
     }
 
-    func frameTransition(from bones: [matrix_float4x4], to toFrame: Int, startProgress: Float = 0) {
+    func frameTransition(from bones: [matrix_float4x4], to toFrame: Int, startProgress: GEFloat = 0) {
         self.fromBones = bones
         self.toBones = object.getBoneTransform(with: toFrame).map { $0.transform }
         self.progress = nil
         self.progress = startProgress
     }
 
-    func setTransitionProgress(_ progress: Float) {
+    func setTransitionProgress(_ progress: GEFloat) {
         let progress = max(min(progress, 1), 0)
         self.progress = progress
     }
 
-    private func updateProgress(_ progress: Float) {
+    private func updateProgress(_ progress: GEFloat) {
         guard fromBones.count == toBones.count else {
             assertionFailure("incorect count in bones")
             return

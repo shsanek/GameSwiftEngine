@@ -29,7 +29,7 @@ public class MetalView: MTKView, MTKViewDelegate {
     public func draw(in view: MTKView) {
         do {
             let time = CACurrentMediaTime()
-            let size = Size(width: Float32(size.width), height: Float32(size.height))
+            let size = Size(width: GEFloat(size.width), height: GEFloat(size.height))
             try controller?.loop(screenSize: size, time: time)
             guard
                 let descriptor = view.currentRenderPassDescriptor,

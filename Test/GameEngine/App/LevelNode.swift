@@ -40,8 +40,9 @@ class LevelNode: Node {
             }
         }
 
-        staticCollisionMapCordinate = []
-        staticCollisionPlanes.append(
+        staticCollisionElement.isActive = true
+        voxelElementController.points = [nil]
+        staticCollisionElement.planes.append(
             .init(
                 transform: translationMatrix4x4(0, -0.5, 0),
                 size: .init(x: 1000, y: 1000)
@@ -68,14 +69,14 @@ class LevelNode: Node {
 
     private func mirror(for x: Int, y: Int, map: [[RawMapTitle]]) -> MapTitle {
         let node = MirrorNode()
-        node.move(to: .init(Float(x), 0, Float(y)))
+        node.move(to: .init(GEFloat(x), 0, GEFloat(y)))
         addSubnode(node)
         return empty(for: x, y: y, map: map)
     }
 
     private func zombee(for x: Int, y: Int, map: [[RawMapTitle]]) -> MapTitle {
         let node = ZombeeNode()
-        node.move(to: .init(Float(x), 0, Float(y)))
+        node.move(to: .init(GEFloat(x), 0, GEFloat(y)))
         addSubnode(node)
         return empty(for: x, y: y, map: map)
     }
@@ -84,20 +85,20 @@ class LevelNode: Node {
         emptyTops.vertexs.values.append(
             contentsOf: rect(
                 .init(
-                    a: .init(x: Float(x) - 0.5, y: 0.5, z: Float(y) - 0.5),
-                    b: .init(x: Float(x) - 0.5, y: 0.5, z: Float(y) + 0.5),
-                    c: .init(x: Float(x) + 0.5, y: 0.5, z: Float(y) + 0.5),
-                    d: .init(x: Float(x) + 0.5, y: 0.5, z: Float(y) - 0.5)
+                    a: .init(x: GEFloat(x) - 0.5, y: 0.5, z: GEFloat(y) - 0.5),
+                    b: .init(x: GEFloat(x) - 0.5, y: 0.5, z: GEFloat(y) + 0.5),
+                    c: .init(x: GEFloat(x) + 0.5, y: 0.5, z: GEFloat(y) + 0.5),
+                    d: .init(x: GEFloat(x) + 0.5, y: 0.5, z: GEFloat(y) - 0.5)
                 )
             )
         )
         emptyBottoms.vertexs.values.append(
             contentsOf: rect(
                 .init(
-                    a: .init(x: Float(x) - 0.5, y: -0.5, z: Float(y) - 0.5),
-                    b: .init(x: Float(x) - 0.5, y: -0.5, z: Float(y) + 0.5),
-                    c: .init(x: Float(x) + 0.5, y: -0.5, z: Float(y) + 0.5),
-                    d: .init(x: Float(x) + 0.5, y: -0.5, z: Float(y) - 0.5)
+                    a: .init(x: GEFloat(x) - 0.5, y: -0.5, z: GEFloat(y) - 0.5),
+                    b: .init(x: GEFloat(x) - 0.5, y: -0.5, z: GEFloat(y) + 0.5),
+                    c: .init(x: GEFloat(x) + 0.5, y: -0.5, z: GEFloat(y) + 0.5),
+                    d: .init(x: GEFloat(x) + 0.5, y: -0.5, z: GEFloat(y) - 0.5)
                 )
             )
         )
@@ -110,7 +111,7 @@ class LevelNode: Node {
         var scale = matrix_float4x4(0.5)
         scale[3][3] = 1
         let baseTransform = matrix_multiply(rotate1, scale)
-        func add(x: Float, y: Float, angle: Float) {
+        func add(x: GEFloat, y: GEFloat, angle: GEFloat) {
             let rotate2 = rotationMatrix4x4(radians: angle, axis: .init(x: 0, y: 1, z: 0))
             let transform = translationMatrix4x4(x, 0, y)
             var matrix = matrix_multiply(rotate2, baseTransform)
@@ -119,8 +120,9 @@ class LevelNode: Node {
                 walls.vertexs.values.append(contentsOf: obj)
             }
             let node = WallNode()
-            node.staticCollisionMapCordinate.append(.init(x: x, y: y))
-            node.staticCollisionPlanes.append(
+            node.voxelElementController.points.insert(.init(vector: .init(x: x, y: 0, z: y)))
+            node.staticCollisionElement.isActive = true
+            node.staticCollisionElement.planes.append(
                 .init(
                     transform: matrix,
                     size: .init(x: 2, y: 2)
@@ -129,16 +131,16 @@ class LevelNode: Node {
             addSubnode(node)
         }
         if x > 0 && map[y][x - 1] != .wall {
-            add(x: Float(x) - 0.5, y: Float(y), angle: -.pi / 2.0)
+            add(x: GEFloat(x) - 0.5, y: GEFloat(y), angle: -.pi / 2.0)
         }
         if x + 1 < map[y].count && map[y][x + 1] != .wall {
-            add(x: Float(x) + 0.5, y: Float(y), angle: .pi / 2.0)
+            add(x: GEFloat(x) + 0.5, y: GEFloat(y), angle: .pi / 2.0)
         }
         if y - 1 > 0 && map[y - 1][x] != .wall {
-            add(x: Float(x), y: Float(y) - 0.5, angle: -.pi)
+            add(x: GEFloat(x), y: GEFloat(y) - 0.5, angle: -.pi)
         }
         if y + 1 < map.count && map[y + 1][x] != .wall {
-            add(x: Float(x), y: Float(y) + 0.5, angle: 0)
+            add(x: GEFloat(x), y: GEFloat(y) + 0.5, angle: 0)
         }
         return .wall
     }
@@ -149,26 +151,26 @@ class LevelNode: Node {
         if y > 0 && y + 1 < map.count && map[y-1][x] == .wall && map[y-1][x] == .wall {
             node.rotate(to: .pi / 2.0, axis: .init(x: 0, y: 1, z: 0))
         }
-        node.move(to: .init(x: Float(x), y: 0, z: Float(y)))
+        node.move(to: .init(x: GEFloat(x), y: 0, z: GEFloat(y)))
         addSubnode(node)
 
         emptyBottoms.vertexs.values.append(
             contentsOf: rect(
                 .init(
-                    a: .init(x: Float(x) - 0.5, y: -0.5, z: Float(y) - 0.5),
-                    b: .init(x: Float(x) - 0.5, y: -0.5, z: Float(y) + 0.5),
-                    c: .init(x: Float(x) + 0.5, y: -0.5, z: Float(y) + 0.5),
-                    d: .init(x: Float(x) + 0.5, y: -0.5, z: Float(y) - 0.5)
+                    a: .init(x: GEFloat(x) - 0.5, y: -0.5, z: GEFloat(y) - 0.5),
+                    b: .init(x: GEFloat(x) - 0.5, y: -0.5, z: GEFloat(y) + 0.5),
+                    c: .init(x: GEFloat(x) + 0.5, y: -0.5, z: GEFloat(y) + 0.5),
+                    d: .init(x: GEFloat(x) + 0.5, y: -0.5, z: GEFloat(y) - 0.5)
                 )
             )
         )
         emptyTops.vertexs.values.append(
             contentsOf: rect(
                 .init(
-                    a: .init(x: Float(x) - 0.5, y: 0.5, z: Float(y) - 0.5),
-                    b: .init(x: Float(x) - 0.5, y: 0.5, z: Float(y) + 0.5),
-                    c: .init(x: Float(x) + 0.5, y: 0.5, z: Float(y) + 0.5),
-                    d: .init(x: Float(x) + 0.5, y: 0.5, z: Float(y) - 0.5)
+                    a: .init(x: GEFloat(x) - 0.5, y: 0.5, z: GEFloat(y) - 0.5),
+                    b: .init(x: GEFloat(x) - 0.5, y: 0.5, z: GEFloat(y) + 0.5),
+                    c: .init(x: GEFloat(x) + 0.5, y: 0.5, z: GEFloat(y) + 0.5),
+                    d: .init(x: GEFloat(x) + 0.5, y: 0.5, z: GEFloat(y) - 0.5)
                 )
             )
         )
@@ -178,16 +180,16 @@ class LevelNode: Node {
     private func lift(for x: Int, y: Int, map: [[RawMapTitle]]) -> MapTitle {
         let lift = LiftNode()
         let node = ActiveContainer(node: lift)
-        node.move(to: .init(x: Float(x), y: 0, z: Float(y)))
+        node.move(to: .init(x: GEFloat(x), y: 0, z: GEFloat(y)))
         addSubnode(node)
 
         emptyBottoms.vertexs.values.append(
             contentsOf: rect(
                 .init(
-                    a: .init(x: Float(x) - 0.5, y: -0.51, z: Float(y) - 0.5),
-                    b: .init(x: Float(x) - 0.5, y: -0.51, z: Float(y) + 0.5),
-                    c: .init(x: Float(x) + 0.5, y: -0.51, z: Float(y) + 0.5),
-                    d: .init(x: Float(x) + 0.5, y: -0.51, z: Float(y) - 0.5)
+                    a: .init(x: GEFloat(x) - 0.5, y: -0.51, z: GEFloat(y) - 0.5),
+                    b: .init(x: GEFloat(x) - 0.5, y: -0.51, z: GEFloat(y) + 0.5),
+                    c: .init(x: GEFloat(x) + 0.5, y: -0.51, z: GEFloat(y) + 0.5),
+                    d: .init(x: GEFloat(x) + 0.5, y: -0.51, z: GEFloat(y) - 0.5)
                 )
             )
         )
@@ -198,13 +200,15 @@ class LevelNode: Node {
 final class WallNode: Node {}
 
 extension Node {
-    func addCollision(x: Float = 0, y: Float = 0, angle: Float) {
+    func addCollision(x: GEFloat = 0, y: GEFloat = 0, angle: GEFloat) {
         let rotate1 = rotationMatrix4x4(radians: .pi / 2.0, axis: .init(x: 1, y: 0, z: 0))
         let rotate2 = rotationMatrix4x4(radians: angle, axis: .init(x: 0, y: 1, z: 0))
         let transform = translationMatrix4x4(x, 0, y)
         var matrix = matrix_multiply(rotate2, rotate1)
         matrix = matrix_multiply(transform, matrix)
-        self.staticCollisionPlanes.append(
+        self.voxelElementController.points = [.init()]
+        self.staticCollisionElement.isActive = true
+        self.staticCollisionElement.planes.append(
             .init(
                 transform: matrix,
                 size: .init(x: 1, y: 1)
@@ -214,26 +218,31 @@ extension Node {
 
     @discardableResult
     func addBottomRectNode(
-        x: Float = 0,
-        y: Float = 0,
+        x: GEFloat = 0,
+        y: GEFloat = 0,
         size: Size = .init(width: 1, height: 1),
-        level: Float = 0,
+        level: GEFloat = 0,
         texture: Texture?,
         collision: Bool = true
     ) -> Sprite3DNode {
         let vertex = rect(
             .init(
-                a: .init(x: Float(x) - size.width / 2, y: level - 0.5, z: Float(y) - size.height / 2),
-                b: .init(x: Float(x) - size.width / 2, y: level - 0.5, z: Float(y) + size.height / 2),
-                c: .init(x: Float(x) + size.width / 2, y: level - 0.5, z: Float(y) + size.height / 2),
-                d: .init(x: Float(x) + size.width / 2, y: level - 0.5, z: Float(y) - size.height / 2)
+                a: .init(x: GEFloat(x) - size.width / 2, y: level - 0.5, z: GEFloat(y) - size.height / 2),
+                b: .init(x: GEFloat(x) - size.width / 2, y: level - 0.5, z: GEFloat(y) + size.height / 2),
+                c: .init(x: GEFloat(x) + size.width / 2, y: level - 0.5, z: GEFloat(y) + size.height / 2),
+                d: .init(x: GEFloat(x) + size.width / 2, y: level - 0.5, z: GEFloat(y) - size.height / 2)
             )
         )
         let node = Sprite3DNode(vertexs: vertex, texture: texture)
         addSubnode(node)
         if collision {
-            let matrix = translationMatrix4x4(Float(x), level - 0.5, Float(y))
-            node.staticCollisionPlanes.append(.init(transform: matrix, size: .init(x: size.width, y: size.height)))
+            let matrix = translationMatrix4x4(GEFloat(x), level - 0.5, GEFloat(y))
+            node.voxelElementController.points = [.init()]
+            node.staticCollisionElement.isActive = true
+            node.staticCollisionElement.planes = [.init(
+                transform: matrix,
+                size: .init(x: size.width, y: size.height)
+            )]
         }
         return node
     }

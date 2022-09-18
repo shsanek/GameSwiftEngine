@@ -20,7 +20,7 @@ public class CameraNode: Node {
 
     public override func loop(_ time: Double, size: Size) throws {
         try super.loop(time, size: size)
-        projectionMatrix = perspectiveMatrix(aspectRatio: Float(size.width / size.height))
+        projectionMatrix = perspectiveMatrix(aspectRatio: GEFloat(size.width / size.height))
     }
 
     public override func didMoveSceene(oldSceene: SceeneNode?, sceene: SceeneNode?) {

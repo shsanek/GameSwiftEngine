@@ -11,7 +11,7 @@ final class PlayerMoveControllerAnimation {
         }
     }
 
-    var speed: Float = 1 {
+    var speed: GEFloat = 1 {
         didSet {
             if speed < 0.4 {
                 speed = 0.4
@@ -50,7 +50,7 @@ final class PlayerMoveControllerAnimation {
 
     private func updateState(_ state: State) {
         currentAnimation?.stop(.saveProgress)
-        let speed: Float = 0.8
+        let speed: GEFloat = 0.8
         let right = vector_float3(-0.1, -0.05, 0)
         switch state {
         case .notMove:

@@ -33,7 +33,7 @@ extension InterQuakeImporter.Object {
         var binds: [Sprite3DInput.InputBoneBind] = vertex.binding.map { .init(index: Int32($0.index), width: $0.power) }
         binds = Array(binds.sorted(by: { $0.width > $1.width }).prefix(4))
         while binds.count < 4 { binds.append(.empty) }
-        let sum = binds.reduce(Float(0), { $0 + $1.width })
+        let sum = binds.reduce(GEFloat(0), { $0 + $1.width })
         if sum > 0 {
             binds = binds.map { .init(index: $0.index + 1, width: $0.width / sum) }
         }
@@ -61,8 +61,8 @@ extension InterQuakeImporter.Object {
 
     func getLocalTransform(for bone: InterQuakeImporter.Bone) -> matrix_float4x4 {
         let q = simd_quatf(vector: normalize(bone.transform.quaternion))
-        let one: Float = 1
-        let zero: Float = 0
+        let one: GEFloat = 1
+        let zero: GEFloat = 0
 
         var rotate = rotationMatrix4x4(radians: q.angle, axis: q.axis)
         if rotate[0][0].isNaN {

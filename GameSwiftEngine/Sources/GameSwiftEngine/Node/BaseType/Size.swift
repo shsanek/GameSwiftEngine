@@ -1,8 +1,8 @@
 public struct Size: Hashable {
-    public let width: Float32
-    public let height: Float32
+    public let width: GEFloat
+    public let height: GEFloat
 
-    public init(width: Float32, height: Float32) {
+    public init(width: GEFloat, height: GEFloat) {
         self.width = width
         self.height = height
     }

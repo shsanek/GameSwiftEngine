@@ -29,17 +29,17 @@ extension ObjImporter {
             let positions = raws
                 .filter { $0.count > 3 && $0[0] == "v" }
                 .map {
-                    vector_float3(Float($0[1]) ?? 0, Float($0[2]) ?? 0, Float($0[3]) ?? 0)
+                    vector_float3(GEFloat($0[1]) ?? 0, GEFloat($0[2]) ?? 0, GEFloat($0[3]) ?? 0)
                 }
             let uvs = raws
                 .filter { $0.count == 3 && $0[0] == "vt" }
                 .map {
-                    vector_float2(Float($0[1]) ?? 0, Float($0[2]) ?? 0)
+                    vector_float2(GEFloat($0[1]) ?? 0, GEFloat($0[2]) ?? 0)
                 }
             let normals = raws
                 .filter { $0.count > 3 && $0[0] == "vn" }
                 .map {
-                    vector_float3(Float($0[1]) ?? 0, Float($0[2]) ?? 0, Float($0[3]) ?? 0)
+                    vector_float3(GEFloat($0[1]) ?? 0, GEFloat($0[2]) ?? 0, GEFloat($0[3]) ?? 0)
                 }
 
             let points = raws

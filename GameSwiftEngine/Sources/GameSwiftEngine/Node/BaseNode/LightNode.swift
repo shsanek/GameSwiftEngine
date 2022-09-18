@@ -28,7 +28,7 @@ public final class LightNode: Node, CameraNodeDelegate {
             provider.light.color
         }
     }
-    public var power: Float {
+    public var power: GEFloat {
         set {
             provider.light.power = newValue
         }
@@ -36,7 +36,7 @@ public final class LightNode: Node, CameraNodeDelegate {
             provider.light.power
         }
     }
-    public var step: Float? {
+    public var step: GEFloat? {
         set {
             provider.light.ceilStep = newValue ?? -1
         }
@@ -44,7 +44,7 @@ public final class LightNode: Node, CameraNodeDelegate {
             provider.light.ceilStep
         }
     }
-    public var angle: Float? {
+    public var angle: GEFloat? {
         set {
             provider.light.angle = newValue ?? -1
         }
@@ -52,7 +52,7 @@ public final class LightNode: Node, CameraNodeDelegate {
             provider.light.angle
         }
     }
-    public var attenuationAngle: Float? {
+    public var attenuationAngle: GEFloat? {
         set {
             provider.light.attenuationAngle = newValue ?? -1
         }
@@ -96,8 +96,8 @@ public final class LightNode: Node, CameraNodeDelegate {
             aspectRatio: 1
         )
         camera.renderInfo.size = .init(
-            width: Float32(mapInfo.texture.width),
-            height: Float32(mapInfo.texture.height)
+            width: GEFloat(mapInfo.texture.width),
+            height: GEFloat(mapInfo.texture.height)
         )
         camera.renderInfo.depthInfo.depth = mapInfo.texture
         camera.renderInfo.depthInfo.arrayIndex = mapInfo.index

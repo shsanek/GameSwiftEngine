@@ -20,13 +20,17 @@ public final class LoopController {
         }
         let delta = lastTime.flatMap { time - $0 } ?? 0
         lastTime = time
+
+        node.voxelsSystemController.loop()
         try Node.updateLoop(
             node: node,
             time: delta,
             size: screenSize
         )
-        node.collisionController.update()
+        node.voxelsSystemController.loop()
+        node.collisionController.loop()
         node.lightController.calculatePosition()
+
         for camera in node.camers {
             if camera.isActive && camera !== node.mainCamera {
                 try renderInTexture(for: camera)
@@ -101,10 +105,10 @@ public final class LoopController {
             device: device,
             descriptor: descriptor,
             encoder: encoder,
-            size: .init(x: Float(size.width), y: Float(size.height)),
+            size: .init(x: GEFloat(size.width), y: GEFloat(size.height)),
             attributes: camera.renderInfo.renderAttributes,
             functionCache: functions,
-            projectionMatrix: perspectiveMatrix(aspectRatio: Float(size.width / size.height)),
+            projectionMatrix: perspectiveMatrix(aspectRatio: GEFloat(size.width / size.height)),
             lightInfo: node.lightController.lightInfo
         )
 

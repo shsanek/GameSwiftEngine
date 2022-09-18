@@ -85,8 +85,7 @@ open class Node {
                 return
             }
             if absoluteTransformStorage == nil {
-                isNeedUpdateStaticCollisionMapCordinate = true
-                isNeedUpdateActivablePosition = true
+                voxelElementController.setNeedPointsUpdate()
                 subnodes.forEach { $0.absoluteTransformStorage = nil }
             }
         }
@@ -106,94 +105,12 @@ open class Node {
         return matrix
     }
 
-    private lazy var staticCollisionProvider: StaticCollisionProvider = StaticCollisionProvider(node: self)
-    private lazy var dynamicCollisionProvider: DynamicCollisionProvider = DynamicCollisionProvider(node: self)
+    public private(set) lazy var voxelElementController = VoxelElementController(node: self)
+    public var staticCollisionElement = StaticCollisionElement()
+    public lazy var dynamicCollisionElement: DynamicCollisionElement = {
+        DynamicCollisionElement(voxelElementController: voxelElementController)
+    }()
 
-    public var dynamicCollisionRadius: Float? = nil {
-        didSet {
-            dynamicCollisionUpdate()
-        }
-    }
-
-    public var staticCollisionPlanes: [StaticCollisionPlane] = [] {
-        didSet {
-            staticCollisionProvider.planes = staticCollisionPlanes
-            updateStaticCollisionProvider()
-        }
-    }
-
-    public var staticCollisionMapCordinate: [vector_float2] = [.init(x: 0, y: 0)] {
-        didSet {
-            guard staticCollisionProvider.isActive else {
-                return
-            }
-            sceene?.collisionController.removeProvider(staticCollisionProvider)
-            staticCollisionMapCordinateUpdate()
-            isNeedUpdateStaticCollisionMapCordinate = false
-        }
-    }
-
-    private var isNeedUpdateStaticCollisionMapCordinate: Bool = false
-    private var isNeedUpdateActivablePosition: Bool = false
-
-    public init() {
-    }
-
-    public func updateActivablePositionIfNeeded() {
-        if isNeedUpdateActivablePosition, let node = self as? INodeActivable {
-            sceene?.activableController.removeActivable(node)
-            sceene?.activableController.addActivable(
-                in: .init(
-                    x: Int(position.x),
-                    y: Int(position.z)
-                ),
-                node
-            )
-        }
-    }
-
-    func updateStaticCollisionMapCordinateIfNeeded() {
-        guard staticCollisionProvider.isActive && isNeedUpdateStaticCollisionMapCordinate else {
-            return
-        }
-        sceene?.collisionController.removeProvider(staticCollisionProvider)
-        staticCollisionMapCordinateUpdate()
-        isNeedUpdateStaticCollisionMapCordinate = false
-    }
-
-    private func updateStaticCollisionProvider() {
-        if staticCollisionPlanes.isEmpty && staticCollisionProvider.isActive {
-            sceene?.collisionController.removeProvider(staticCollisionProvider)
-        }
-        if !staticCollisionPlanes.isEmpty && !staticCollisionProvider.isActive {
-            staticCollisionMapCordinateUpdate()
-        }
-        isNeedUpdateStaticCollisionMapCordinate = false
-    }
-
-    private func staticCollisionMapCordinateUpdate() {
-        for MapCordinate in staticCollisionMapCordinate {
-            let cord = matrix_multiply(absoluteTransform, .init(MapCordinate.x, 0, MapCordinate.y, 1))
-            sceene?.collisionController.addProvider(
-                staticCollisionProvider,
-                in: .init(x: Int(cord.x), y: Int(cord.z))
-            )
-        }
-        if staticCollisionMapCordinate.isEmpty {
-            sceene?.collisionController.addProvider(
-                staticCollisionProvider
-            )
-        }
-    }
-
-    private func dynamicCollisionUpdate() {
-        if !dynamicCollisionProvider.isActive && dynamicCollisionRadius != nil {
-            sceene?.collisionController.addProvider(dynamicCollisionProvider)
-        }
-        if dynamicCollisionProvider.isActive && dynamicCollisionRadius == nil {
-            sceene?.collisionController.removeProvider(dynamicCollisionProvider)
-        }
-    }
 
     private var storageModelMatrix: matrix_float4x4? {
         didSet {
@@ -203,25 +120,17 @@ open class Node {
         }
     }
 
+    public init() {
+    }
+
     open func loop(_ time: Double, size: Size) throws {
         let animations = self.animations
-        animations.forEach { $0.loop(Float(time)) }
+        animations.forEach { $0.loop(GEFloat(time)) }
     }
 
     open func didMoveSceene(oldSceene: SceeneNode?, sceene: SceeneNode?) {
-        if staticCollisionProvider.isActive {
-            oldSceene?.collisionController.removeProvider(staticCollisionProvider)
-        }
-        staticCollisionMapCordinateUpdate()
-        if dynamicCollisionProvider.isActive {
-            oldSceene?.collisionController.removeProvider(dynamicCollisionProvider)
-        }
-        dynamicCollisionUpdate()
-        if let node = self as? INodeActivable {
-            oldSceene?.activableController.removeActivable(node)
-            isNeedUpdateActivablePosition = true
-            updateActivablePositionIfNeeded()
-        }
+        oldSceene?.voxelsSystemController.removeController(voxelElementController)
+        sceene?.voxelsSystemController.addController(voxelElementController)
     }
 
     public func getParent<T>(with type: T.Type) -> T? {
@@ -267,11 +176,11 @@ extension Node {
 }
 
 extension Node {
-    public func rotate(to angle: Float, axis: vector_float3) {
+    public func rotate(to angle: GEFloat, axis: vector_float3) {
         rotateMatrix = rotationMatrix4x4(radians: angle, axis: axis)
     }
 
-    public func rotate(on angle: Float, axis: vector_float3) {
+    public func rotate(on angle: GEFloat, axis: vector_float3) {
         let rotation = rotationMatrix4x4(radians: angle, axis: axis)
         rotateMatrix = matrix_multiply(rotation, rotateMatrix)
     }
@@ -314,16 +223,6 @@ extension Node {
 
     public func removeRenderInputs(_ encodable: AnyRenderHandler) {
         renderInputs.removeAll(where: { $0 === encodable })
-    }
-}
-
-extension Node {
-    public func lockUpdateCordinate(_ handler: () -> Void) {
-        let isNeedUpdateActivablePosition = self.isNeedUpdateActivablePosition
-        let isNeedUpdateStaticCollisionMapCordinate = self.isNeedUpdateStaticCollisionMapCordinate
-        handler()
-        self.isNeedUpdateActivablePosition = isNeedUpdateActivablePosition
-        self.isNeedUpdateStaticCollisionMapCordinate = isNeedUpdateStaticCollisionMapCordinate
     }
 }
 
@@ -384,10 +283,10 @@ extension Node {
 }
 
 extension Node {
-    public func activables(_ angle: Float = .pi / 2) ->  [INodeActivable] {
+    public func getNodesWithDirection(_ angle: GEFloat = .pi / 2) ->  [Node] {
         let z = vector_float4(0, 0, 1, 1)
         let direction = matrix_multiply(absoluteTransform, z) - vector_float4(position, 1)
-        return sceene?.activableController.getActivableNode(
+        return sceene?.voxelsSystemController.getActivableNodes(
             in: position,
             lng: 1.5,
             direction: .init(x: direction.x, y: direction.y, z: direction.z),

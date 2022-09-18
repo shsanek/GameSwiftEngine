@@ -16,7 +16,7 @@ public extension InterQuakeImporter {
     struct Vertex {
         public struct Binding {
             let index: Int
-            let power: Float
+            let power: GEFloat
         }
         public let position: vector_float3
         public let uv: vector_float2?

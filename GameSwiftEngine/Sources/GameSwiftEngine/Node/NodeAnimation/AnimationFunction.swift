@@ -1,5 +1,5 @@
 public struct AnimationFunction {
-    let function: (Float) -> Float
+    let function: (GEFloat) -> GEFloat
 }
 
 extension AnimationFunction {
