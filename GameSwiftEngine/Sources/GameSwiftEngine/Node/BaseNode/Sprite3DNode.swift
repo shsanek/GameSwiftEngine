@@ -1,14 +1,21 @@
 import simd
 
+
+/// Simple 3d geometry object
 public final class Sprite3DNode: Node {
-    public var texture: Texture? {
+    /// Current texture
+    public var texture: ITexture? {
         didSet {
             encoder.texture = texture
         }
     }
     private let encoder: Sprite3DInput
 
-    public init(texture: Texture?, size: Size) {
+    /// Create plane object
+    /// - Parameters:
+    ///   - texture: texture for object
+    ///   - size: size plane
+    public init(texture: ITexture?, size: Size) {
         let x = size.width / 2
         let y = size.height / 2
         let encoder = Sprite3DInput(
@@ -29,6 +36,12 @@ public final class Sprite3DNode: Node {
         addRenderInput(encoder)
     }
 
+
+    /// Create plane object
+    /// Use importers for generate vertexs example `ObjImporter`
+    /// - Parameters:
+    ///   - vertexs: vertexs
+    ///   - size: size plane
     public init(
         vertexs: [Sprite3DInput.VertexInput],
         texture: Texture?

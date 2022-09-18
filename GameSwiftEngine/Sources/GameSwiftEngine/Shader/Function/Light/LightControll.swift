@@ -1,5 +1,4 @@
 import simd
-import MetalKit
 
 final class LightController {
     private(set) var lightInfo = LightInfo()

@@ -1,10 +1,12 @@
 import simd
 
+/// Node light source
 public final class LightNode: Node, CameraNodeDelegate {
     let provider = LightProvider()
 
     private let camera: CameraNode = CameraNode()
 
+    /// Active dynamic shadow, Only 5 dynamic shadows can be active at the same time
     public var isShadow: Bool = false {
         didSet {
             if isShadow == oldValue {
@@ -20,6 +22,7 @@ public final class LightNode: Node, CameraNodeDelegate {
         }
     }
 
+    /// Color of light
     public var color: vector_float3 {
         set {
             provider.light.color = newValue
@@ -28,6 +31,9 @@ public final class LightNode: Node, CameraNodeDelegate {
             provider.light.color
         }
     }
+
+    /// Power light
+    /// `power = power / (length ^ 2)` -  excluding direction
     public var power: GEFloat {
         set {
             provider.light.power = newValue
@@ -36,6 +42,8 @@ public final class LightNode: Node, CameraNodeDelegate {
             provider.light.power
         }
     }
+
+    /// step rounding for power ,to create non-smooth gradients
     public var step: GEFloat? {
         set {
             provider.light.ceilStep = newValue ?? -1
@@ -44,6 +52,11 @@ public final class LightNode: Node, CameraNodeDelegate {
             provider.light.ceilStep
         }
     }
+
+    /// Angle for light direction
+    /// `direction = (0, 0, 1)` - rotate the node to change
+    /// Power does not change at all values inside the angle
+    /// To make the fade use `attenuationAngle`
     public var angle: GEFloat? {
         set {
             provider.light.angle = newValue ?? -1
@@ -52,12 +65,25 @@ public final class LightNode: Node, CameraNodeDelegate {
             provider.light.angle
         }
     }
+
+    // Liner fade angle
+    // power = 1 - (currentAngle - angle) / attenuationAngle
     public var attenuationAngle: GEFloat? {
         set {
             provider.light.attenuationAngle = newValue ?? -1
         }
         get {
             provider.light.attenuationAngle
+        }
+    }
+
+
+    /// The number of frames to skip when drawing a dynamic shadow
+    public var shadowSkipFrame: Int = 2 {
+        didSet {
+            if shadowSkipFrame < 0 {
+                shadowSkipFrame = 0
+            }
         }
     }
 
@@ -71,14 +97,6 @@ public final class LightNode: Node, CameraNodeDelegate {
         super.didMoveSceene(oldSceene: oldSceene, sceene: sceene)
         oldSceene?.lightController.removeLight(self)
         sceene?.lightController.addLight(self)
-    }
-
-    public var shadowSkipFrame: Int = 2 {
-        didSet {
-            if shadowSkipFrame < 0 {
-                shadowSkipFrame = 0
-            }
-        }
     }
 
     private var shadowMapInfo: ShadowMapInfo?

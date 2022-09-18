@@ -1,8 +1,18 @@
+/// Struct for setting animation
 public struct NodeAnimation {
+    /// tag
     public var tag: String? = nil
+
+    /// Duration may be ignored in cases of nested animation
     public var duration: GEFloat = 1
+
+    /// Number of repeat, if zero then forever loop
     public var repeatCount: Int = 1
+
+    /// Function for controll progress animation
     public var animationFunction: AnimationFunction = .default
+
+    /// Maker for handler animation
     public let animationMaker: (Node) -> IAnimationHandler
 }
 
@@ -62,10 +72,13 @@ extension NodeAnimation {
 import simd
 
 extension NodeAnimation {
+
+    /// Empty animation
     public static var empty: NodeAnimation {
         .init(animationMaker: { _ in return AnimationHandler { _, _ in }})
     }
 
+    /// Animation for change position node
     public static func move(to position: @escaping (GEFloat) -> vector_float3) -> NodeAnimation {
         .init { node in
             return AnimationHandler { node, progress in
@@ -74,6 +87,7 @@ extension NodeAnimation {
         }
     }
 
+    /// Animation for change position node
     public static func move(to toPosition: vector_float3) -> NodeAnimation {
         .init { node in
             var fromPosition = node.localPosition
@@ -88,6 +102,7 @@ extension NodeAnimation {
         }
     }
 
+    /// Animation for change position node
     public static func move(from fromPosition: vector_float3, to toPosition: vector_float3) -> NodeAnimation {
         .init { node in
             return AnimationHandler { node, progress in
@@ -96,6 +111,7 @@ extension NodeAnimation {
         }
     }
 
+    /// Animation for bones, only for `Object3DNode`
     public static func updateFrame(from fromFrame: Int, to toFrame: Int) -> NodeAnimation {
         .init { node in
             return AnimationHandler<Object3DNode>(
@@ -109,6 +125,7 @@ extension NodeAnimation {
         }
     }
 
+    /// Animation for bones, only for `Object3DNode`
     public static func updateFrame(from bones: [matrix_float4x4], to toFrame: Int) -> NodeAnimation {
         .init { node in
             return AnimationHandler<Object3DNode>(
@@ -122,6 +139,7 @@ extension NodeAnimation {
         }
     }
 
+    /// Animation for bones, only for `Object3DNode`
     public static func updateFrames(_ frames: [Int]) -> NodeAnimation {
         guard frames.count > 1 else {
             if let first = frames.first {
@@ -137,6 +155,10 @@ extension NodeAnimation {
         return sequence(to: animations)
     }
 
+    /// Animation sequence
+    /// Animations will be executed in a row one after another
+    /// By default, the length is the sum of the lengths of all animations
+    /// If change duration then duration ratios persist
     public static func sequence(to animations: [NodeAnimation]) -> NodeAnimation {
         let fullDuration: GEFloat = animations.reduce(GEFloat(0), { $0 + $1.duration })
         let animations: [NodeAnimation] = animations.map {

@@ -1,11 +1,16 @@
 import simd
 
+/// Node for InterQuakeImporter.Object
+/// Supported bone animation
 public final class Object3DNode: Node {
-    public var texture: Texture? {
+    /// Current texture
+    public var texture: ITexture? {
         didSet {
             encoder.texture = texture
         }
     }
+
+    /// Number of animation frames
     public var frameCount: Int {
         return object.frame.count
     }
@@ -36,7 +41,12 @@ public final class Object3DNode: Node {
         }
     }
 
-    public init(object: InterQuakeImporter.Object, texture: Texture? = nil) {
+    /// Create node
+    /// Use ObjImporter for load Object
+    /// - Parameters:
+    ///   - object: Geometry
+    ///   - texture: texture
+    public init(object: InterQuakeImporter.Object, texture: ITexture? = nil) {
         self.object = object
         self.texture = texture
         self.encoder = Sprite3DInput(texture: texture, vertexs: object.getVertexs())
@@ -45,7 +55,10 @@ public final class Object3DNode: Node {
         addRenderInput(encoder)
         self.encoder.vertexIndexs.values = object.getIndexs()
     }
-    
+
+    /// Set frame (not animation)
+    /// For animation use `NodeAnimation.updateFrame`
+    /// - Parameter frame: frame number
     public func setFrame(_ frame: Int) {
         self.bones = object.getBoneTransform(with: frame).map { $0.transform }
         self.toBones = self.bones

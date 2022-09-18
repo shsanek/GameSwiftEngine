@@ -50,8 +50,8 @@ public final class LoopController {
         let info = camera.renderInfo
         let size: Size = info.size
 
-        let texture = info.colorInfo.color?.getMLTexture(device: device)
-        let depthTexture = info.depthInfo.depth?.getMLTexture(device: device)
+        let texture = info.colorInfo.color?.metal?.getMLTexture(device: device)
+        let depthTexture = info.depthInfo.depth?.metal?.getMLTexture(device: device)
 
         let depthAttachementTexureDescriptor = MTLRenderPassDepthAttachmentDescriptor()
         depthAttachementTexureDescriptor.clearDepth = 1.0

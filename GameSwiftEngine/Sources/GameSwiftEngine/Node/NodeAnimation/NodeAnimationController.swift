@@ -1,11 +1,25 @@
+/// Animation controller use `func animation` in `Node` for create
+///
 public final class NodeAnimationController {
+
+    /// Stop action
     public enum StopAction {
+        /// Saved current progress
         case saveProgress
+
+        /// Call animation handler with progress 1 if need
         case toEndProgress
+
+        /// Call animation handler with progress 0 if need
         case toStartProgress
     }
 
+    /// Tag for identifier animation
     public let tag: String?
+
+    /// animation speed multiplier dfault 1
+    public var speed: GEFloat = 1
+
     var progress: GEFloat {
         currentTime / duration
     }
@@ -13,8 +27,6 @@ public final class NodeAnimationController {
     var functionProgress: GEFloat {
         animationFunction.function(progress)
     }
-
-    public var speed: GEFloat = 1
 
     private let completion: ((Bool, StopAction) -> Void)?
 
@@ -48,14 +60,18 @@ public final class NodeAnimationController {
         self.repeatCount = repeatCount
     }
 
+    /// Pauses the animation
     public func play() {
         self.isPaused = false
     }
 
+    /// Pauses the animation
     public func pause() {
         self.isPaused = true
     }
 
+    /// Stop animation
+    /// - Parameter stopAction: finished animation and remove it from node
     public func stop(_ stopAction: StopAction = .saveProgress) {
         self.stop(isFinish: false, stopAction)
     }

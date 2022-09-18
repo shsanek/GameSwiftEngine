@@ -10,7 +10,6 @@ public final class Voxel {
     }
 }
 
-
 public final class UnvoxelGroup {
     public private(set) var containers: [ObjectIdentifier: Node] = [:]
 

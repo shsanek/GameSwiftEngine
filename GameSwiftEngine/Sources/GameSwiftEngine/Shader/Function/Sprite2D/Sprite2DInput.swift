@@ -41,7 +41,7 @@ extension Sprite2DInput: MetalRenderHandler {
         try functionsСache
             .get(with: Self.spriteFuntion, device: device)
             .start(encoder: encoder)
-        guard let texture = self.texture.getMLTexture(device: device) else {
+        guard let texture = self.texture.metal?.getMLTexture(device: device) else {
             return
         }
         let position = points.map { $0.position }

@@ -1,12 +1,135 @@
 import simd
 
+/// Base building block for you app
 open class Node {
+    /// Parent - current parent node or nil if not contained in hierarchy
     public var parent: Node? {
         storageParent
     }
 
+    /// Current - current SceeneNode or nil if hierarchy is not attached to the SceeneNode
     public var sceene: SceeneNode? {
         storageSceene
+    }
+
+    /// Responsible for display, if true then ingore all renderInputs
+    open var isHidden: Bool = false
+
+
+    /// First matrix for transform
+    /// * see also absoluteTransform, modelMatrix
+    public var firstMatrix: matrix_float4x4 = .init(1) {
+        didSet {
+            if firstMatrix == oldValue {
+                return
+            }
+            storageModelMatrix = nil
+        }
+    }
+
+    /// Scale matrix for transform
+    /// * see also `absoluteTransform`, `modelMatrix`
+    public var scaleMatrix: matrix_float4x4 = .init(1) {
+        didSet {
+            if scaleMatrix == oldValue {
+                return
+            }
+            storageModelMatrix = nil
+        }
+    }
+
+    /// Rotate matrix for transform
+    /// * see also `absoluteTransform`, `modelMatrix`
+    public var rotateMatrix: matrix_float4x4 = .init(1) {
+        didSet {
+            if rotateMatrix == oldValue {
+                return
+            }
+            storageModelMatrix = nil
+        }
+    }
+
+    /// Position matrix for transform
+    /// * see also `absoluteTransform`, `modelMatrix`
+    public var positionMatrix: matrix_float4x4 = .init(1) {
+        didSet {
+            if positionMatrix == oldValue {
+                return
+            }
+            storageModelMatrix = nil
+        }
+    }
+
+    /// Last matrix for transform
+    /// * see also `absoluteTransform`, `modelMatrix`
+    public var lastMatrix: matrix_float4x4 = .init(1) {
+        didSet {
+            if lastMatrix == oldValue {
+                return
+            }
+            storageModelMatrix = nil
+        }
+    }
+
+
+    /// Result local transform matrix for node
+    /// `modelMatrix = lastMatrix * positionMatrix * rotateMatrix * scaleMatrix * firstMatrix`
+    public var modelMatrix: matrix_float4x4 {
+        if let storageModelMatrix = storageModelMatrix {
+            return storageModelMatrix
+        }
+        var matrix = firstMatrix
+        matrix = matrix_multiply(scaleMatrix, matrix)
+        matrix = matrix_multiply(rotateMatrix, matrix)
+        matrix = matrix_multiply(positionMatrix, matrix)
+        matrix = matrix_multiply(lastMatrix, matrix)
+        storageModelMatrix = matrix
+        return matrix
+    }
+
+    /// Result transform taking into account the transformations of the parents
+    /// `modelMatrix = lastMatrix * positionMatrix * rotateMatrix * scaleMatrix * firstMatrix`
+    public var absoluteTransform: matrix_float4x4 {
+        if let absoluteTransformStorage = absoluteTransformStorage {
+            return absoluteTransformStorage
+        }
+        let matrix: matrix_float4x4
+        if let parent = self.parent {
+            matrix = matrix_multiply(parent.absoluteTransform, self.modelMatrix)
+        } else {
+            matrix = self.modelMatrix
+        }
+        absoluteTransformStorage = matrix
+        return matrix
+    }
+
+    /// VoxelController - empty by default
+    /// add element in groups ot points for active
+    public private(set) lazy var voxelElementController = VoxelElementController(node: self)
+
+    /// Controller for static collision
+    /// Static collision not affect position current node, but can affect other nodes
+    /// See more in `CollisionController`
+    public var staticCollisionElement = StaticCollisionElement()
+
+    /// Informat for dynamic collision
+    /// Dynamic collsion can affect position current node
+    /// See more in `CollisionController`
+    public lazy var dynamicCollisionElement: DynamicCollisionElement = {
+        DynamicCollisionElement(voxelElementController: voxelElementController)
+    }()
+
+
+    private var absoluteTransformStorage: matrix_float4x4? {
+        didSet {
+            if absoluteTransformStorage == oldValue {
+                return
+            }
+            if absoluteTransformStorage == nil {
+                voxelElementController.setNeedPointsUpdate()
+                subnodes.forEach { $0.absoluteTransformStorage = nil }
+            }
+        }
     }
 
     private weak var storageParent: Node?
@@ -24,94 +147,6 @@ open class Node {
     private(set) var subnodes: [Node] = []
     private var animations: [NodeAnimationController] = []
 
-    open var isHidden: Bool = false
-
-    public var firstMatrix: matrix_float4x4 = .init(1) {
-        didSet {
-            if firstMatrix == oldValue {
-                return
-            }
-            storageModelMatrix = nil
-        }
-    }
-    public var scaleMatrix: matrix_float4x4 = .init(1) {
-        didSet {
-            if scaleMatrix == oldValue {
-                return
-            }
-            storageModelMatrix = nil
-        }
-    }
-    public var rotateMatrix: matrix_float4x4 = .init(1) {
-        didSet {
-            if rotateMatrix == oldValue {
-                return
-            }
-            storageModelMatrix = nil
-        }
-    }
-    public var positionMatrix: matrix_float4x4 = .init(1) {
-        didSet {
-            if positionMatrix == oldValue {
-                return
-            }
-            storageModelMatrix = nil
-        }
-    }
-    public var lastMatrix: matrix_float4x4 = .init(1) {
-        didSet {
-            if lastMatrix == oldValue {
-                return
-            }
-            storageModelMatrix = nil
-        }
-    }
-    public var modelMatrix: matrix_float4x4 {
-        if let storageModelMatrix = storageModelMatrix {
-            return storageModelMatrix
-        }
-        var matrix = firstMatrix
-        matrix = matrix_multiply(scaleMatrix, matrix)
-        matrix = matrix_multiply(rotateMatrix, matrix)
-        matrix = matrix_multiply(positionMatrix, matrix)
-        matrix = matrix_multiply(lastMatrix, matrix)
-        storageModelMatrix = matrix
-        return matrix
-    }
-
-    var absoluteTransformStorage: matrix_float4x4? {
-        didSet {
-            if absoluteTransformStorage == oldValue {
-                return
-            }
-            if absoluteTransformStorage == nil {
-                voxelElementController.setNeedPointsUpdate()
-                subnodes.forEach { $0.absoluteTransformStorage = nil }
-            }
-        }
-    }
-
-    public var absoluteTransform: matrix_float4x4 {
-        if let absoluteTransformStorage = absoluteTransformStorage {
-            return absoluteTransformStorage
-        }
-        let matrix: matrix_float4x4
-        if let parent = self.parent {
-            matrix = matrix_multiply(parent.absoluteTransform, self.modelMatrix)
-        } else {
-            matrix = self.modelMatrix
-        }
-        absoluteTransformStorage = matrix
-        return matrix
-    }
-
-    public private(set) lazy var voxelElementController = VoxelElementController(node: self)
-    public var staticCollisionElement = StaticCollisionElement()
-    public lazy var dynamicCollisionElement: DynamicCollisionElement = {
-        DynamicCollisionElement(voxelElementController: voxelElementController)
-    }()
-
-
     private var storageModelMatrix: matrix_float4x4? {
         didSet {
             if storageModelMatrix == nil {
@@ -120,37 +155,41 @@ open class Node {
         }
     }
 
+    /// Init
     public init() {
     }
 
+    /// Main control methos
+    /// Called before all drawings. One once per app cycle.
+    /// See more in `LoopController`
+    /// - Parameters:
+    ///   - time: delta between frames
+    ///   - size: current screen resalution size
     open func loop(_ time: Double, size: Size) throws {
         let animations = self.animations
         animations.forEach { $0.loop(GEFloat(time)) }
     }
 
+    /// called on change sceene (rootNode)
+    /// - Parameters:
+    ///   - oldSceene: if the node was already on the sceene
+    ///   - sceene: new sceene
     open func didMoveSceene(oldSceene: SceeneNode?, sceene: SceeneNode?) {
         oldSceene?.voxelsSystemController.removeController(voxelElementController)
         sceene?.voxelsSystemController.addController(voxelElementController)
     }
-
-    public func getParent<T>(with type: T.Type) -> T? {
-        var node = parent
-        while let current = node {
-            if let result = current as? T {
-                return result
-            }
-            node = current.parent
-        }
-        return nil
-    }
 }
 
 extension Node {
+    /// Global position in hierarchy
+    ///  `position = absoluteTransform * .zero`
     public var position: vector_float3 {
         let position = matrix_multiply(absoluteTransform, .init(0, 0, 0, 1))
         return .init(x: position.x, y: position.y, z: position.z)
     }
 
+    /// Global position in node
+    ///  `position = absoluteTransform * .zero`
     public var localPosition: vector_float3 {
         .init(
             x: positionMatrix[3][0],
@@ -159,16 +198,15 @@ extension Node {
         )
     }
 
-    public func moveGlobal(to position: vector_float3) {
-        move(to: .zero)
-        let position = matrix_multiply(absoluteTransform.inverse, vector_float4(position, 1))
-        move(to: .init(x: position.x, y: position.y, z: position.z))
-    }
-
+    /// Change local position
+    /// Fully replace positionMatrix
+    /// - Parameter position: new position
     public func move(to position: vector_float3) {
         positionMatrix = translationMatrix4x4(position.x, position.y, position.z)
     }
 
+    /// Change local position
+    /// - Parameter position: offset
     public func move(on position: vector_float3) {
         let position = translationMatrix4x4(position.x, position.y, position.z)
         positionMatrix = matrix_multiply(position, positionMatrix)
@@ -176,10 +214,20 @@ extension Node {
 }
 
 extension Node {
+    /// Change local rotate
+    /// Fully replace rotateMatrix
+    /// - Parameters:
+    ///   - angle: angle
+    ///   - axis: normalized axis
     public func rotate(to angle: GEFloat, axis: vector_float3) {
         rotateMatrix = rotationMatrix4x4(radians: angle, axis: axis)
     }
 
+    /// Change local rotate
+    /// `rotate = newRotate * rotateMatrix`
+    /// - Parameters:
+    ///   - angle: angle
+    ///   - axis: normalized axis
     public func rotate(on angle: GEFloat, axis: vector_float3) {
         let rotation = rotationMatrix4x4(radians: angle, axis: axis)
         rotateMatrix = matrix_multiply(rotation, rotateMatrix)
@@ -187,6 +235,7 @@ extension Node {
 }
 
 extension Node {
+    /// Local scale
     public var scale: vector_float3 {
         .init(
             x: scaleMatrix[0][0],
@@ -195,6 +244,8 @@ extension Node {
         )
     }
 
+    /// Change scale
+    /// - Parameter scale: newScale
     public func scale(to scale: vector_float3) {
         let scale = matrix_float4x4(
             .init(x: scale.x, y: 0, z: 0, w: 0),
@@ -205,6 +256,8 @@ extension Node {
         scaleMatrix = scale
     }
 
+    /// Change scale
+    /// - Parameter scale: add scale
     public func scale(on scale: vector_float3) {
         let scale = matrix_float4x4(
             .init(x: scale.x, y: 0, z: 0, w: 0),
@@ -217,16 +270,24 @@ extension Node {
 }
 
 extension Node {
+    /// Add render input for display
+    /// See more `AnyRenderHandler`, `LoopController`
+    /// - Parameter encodable: new encodable
     public func addRenderInput(_ encodable: AnyRenderHandler) {
         renderInputs.append(encodable)
     }
 
+    /// Remove render input for display
+    /// See more `AnyRenderHandler`, `LoopController`
+    /// - Parameter encodable: old encodable
     public func removeRenderInputs(_ encodable: AnyRenderHandler) {
         renderInputs.removeAll(where: { $0 === encodable })
     }
 }
 
 extension Node {
+    /// Add subnode in hierarchy
+    /// - Parameter node: new node, node will be removed from the previous hierarchy
     public func addSubnode(_ node: Node) {
         node.absoluteTransformStorage = nil
         node.storageParent?.removeSubnode(node)
@@ -235,6 +296,7 @@ extension Node {
         node.storageSceene = sceene
     }
 
+    /// Delete node from hierarchy
     public func removeFromParent() {
         absoluteTransformStorage = nil
         storageParent?.removeSubnode(self)
@@ -283,6 +345,10 @@ extension Node {
 }
 
 extension Node {
+    /// Returns nodes from `voxelsSystemController`, in the current direction of the object
+    /// `Direction = absoluteTransform *  (0, 0, 1, 1) - position`
+    /// - Parameter angle: yaw angle
+    /// - Returns: nodes sorted by distance
     public func getNodesWithDirection(_ angle: GEFloat = .pi / 2) ->  [Node] {
         let z = vector_float4(0, 0, 1, 1)
         let direction = matrix_multiply(absoluteTransform, z) - vector_float4(position, 1)
@@ -296,8 +362,13 @@ extension Node {
 }
 
 extension Node {
-    @discardableResult
-    public func addAnimation(
+    /// Make and added Animation Controller
+    /// - Parameters:
+    ///   - animation: NodeAnimation
+    ///   - shouldPlay: Bool default true, start animation immediately after adding
+    ///   - completion: Completion with isFinish flag
+    /// - Returns: AnimationController for controll animation
+    @discardableResult public func addAnimation(
         _ animation: NodeAnimation,
         shouldPlay: Bool = true,
         completion: ((Bool) -> Void)? = nil

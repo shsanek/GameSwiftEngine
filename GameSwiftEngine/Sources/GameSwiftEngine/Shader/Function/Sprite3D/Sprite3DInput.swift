@@ -143,7 +143,7 @@ extension Sprite3DInput: MetalRenderHandler {
     }
 
     private func prepareFragment(encoder: MTLRenderCommandEncoder, device: MTLDevice) throws {
-        let texture = self.texture?.getMLTexture(device: device)
+        let texture = self.texture?.metal?.getMLTexture(device: device)
         let light = try? lightInfo.getBuffer(for: device)
 
         encoder.setFragmentTexture(texture, index: 0)
@@ -159,7 +159,7 @@ extension Sprite3DInput: MetalRenderHandler {
             encoder.setFragmentBytes(&light, length: MemoryLayout<LightInfo.Light>.stride, index: 0)
         }
         if let lightInfo = lightInfo {
-            encoder.setFragmentTexture(lightInfo.shadowMapTexture?.getMLTexture(device: device), index: 1)
+            encoder.setFragmentTexture(lightInfo.shadowMapTexture?.metal?.getMLTexture(device: device), index: 1)
         }
         encoder.setFragmentBytes(&count, length: MemoryLayout<Int32>.stride, index: 1)
     }

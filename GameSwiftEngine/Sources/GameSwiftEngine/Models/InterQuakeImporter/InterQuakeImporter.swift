@@ -1,5 +1,7 @@
 import simd
 
+/// InterQuakeImporter - for import iqe model. Supported bones animation. But not supported framerate.
+/// see [site](http://sauerbraten.org) [git](https://github.com/lsalzman/iqm)
 public final class InterQuakeImporter {
     public static func load(_ content: String) -> Object {
         InterQuakeImporter(content: content).load()

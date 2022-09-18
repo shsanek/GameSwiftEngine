@@ -56,7 +56,6 @@ final class MLTextureCache {
         description.usage = .shaderRead
         let result = device.makeTexture(descriptor: description)
         var data = texture.data
-        //let mutBufPtr = UnsafeMutableBufferPointer(start: &data, count: data.count)
 
         result?.replace(
             region: .init(
