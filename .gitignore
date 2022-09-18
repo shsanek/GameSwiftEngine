@@ -93,3 +93,7 @@ Test/GameEngine/3ds
 *.DS_Store
 *.xcworkspacedata
 Test/GameEngine.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+Demo/GameEngine/3ds
+Demo/GameEngine/Assets.xcassets
+Demo/GameEngine.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+Demo/GameEngine/Preview Content/Preview Assets.xcassets/Contents.json

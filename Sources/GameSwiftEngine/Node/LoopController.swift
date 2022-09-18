@@ -66,6 +66,8 @@ public final class LoopController {
         descriptor.colorAttachments[0].storeAction = .store
         descriptor.colorAttachments[0].slice = info.colorInfo.arrayIndex
         descriptor.depthAttachment = depthAttachementTexureDescriptor
+        descriptor.renderTargetWidth = Int(size.width)
+        descriptor.renderTargetHeight = Int(size.height)
 
         try metalRender(camera: camera, descriptor: descriptor, drawable: nil, size: size)
 

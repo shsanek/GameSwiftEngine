@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 import MetalKit
 
-public final class Texture: ITexture {
+public final class Texture: ITexture, IMetalTexture {
     let data: [UInt8]
     public let width: Int
     public let height: Int

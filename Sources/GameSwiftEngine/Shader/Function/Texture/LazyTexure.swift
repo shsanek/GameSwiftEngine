@@ -1,6 +1,6 @@
 import MetalKit
 
-final class LazyTexure: ITexture {
+final class LazyTexure: ITexture, IMetalTexture {
     let width: Int
     let height: Int
 

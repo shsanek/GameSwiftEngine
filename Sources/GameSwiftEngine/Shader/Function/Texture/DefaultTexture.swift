@@ -1,6 +1,6 @@
 import MetalKit
 
-struct DefaultTexture: ITexture {
+struct DefaultTexture: ITexture, IMetalTexture {
     let width: Int
     let height: Int
     let texture: MTLTexture?
