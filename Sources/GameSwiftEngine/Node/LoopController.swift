@@ -1,7 +1,7 @@
 import MetalKit
 
 public final class LoopController {
-    public var node: SceeneNode?
+    public var node: SceneNode?
     public var updateHandler: ((_ time: Double) throws -> Void)? = nil
 
     private let commandQueue: MTLCommandQueue?

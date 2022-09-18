@@ -1,6 +1,6 @@
 import GameSwiftEngine
 
-final class MainNode: SceeneNode {
+final class MainNode: SceneNode {
     var player: PlayerNode?
 
     override init() {

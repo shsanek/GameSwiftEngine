@@ -40,11 +40,11 @@ public final class MirrorNode: Node, CameraNodeDelegate {
         try super.loop(time, size: size)
 //        camera.isActive = enableCounter % 4 == 0
 //        enableCounter += 1
-        guard camera.isActive, let sceene = sceene else {
+        guard camera.isActive, let scene = scene else {
             return
         }
         let normal = plane.absoluteTransform * vector_float4(0, 0, -1, 1) - plane.position.to4
-        var cameraPosition = sceene.mainCamera.position.to4 - plane.position.to4
+        var cameraPosition = scene.mainCamera.position.to4 - plane.position.to4
         cameraPosition.y = 0
         let reflection = -cameraPosition - 2 * dot(-cameraPosition, normal) * normal
         let a1 = normalize(cameraPosition)

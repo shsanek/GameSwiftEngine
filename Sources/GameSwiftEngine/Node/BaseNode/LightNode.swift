@@ -93,10 +93,10 @@ public final class LightNode: Node, CameraNodeDelegate {
         }
     }
 
-    public override func didMoveSceene(oldSceene: SceeneNode?, sceene: SceeneNode?) {
-        super.didMoveSceene(oldSceene: oldSceene, sceene: sceene)
+    public override func didMoveSceene(oldSceene: SceneNode?, scene: SceneNode?) {
+        super.didMoveSceene(oldSceene: oldSceene, scene: scene)
         oldSceene?.lightController.removeLight(self)
-        sceene?.lightController.addLight(self)
+        scene?.lightController.addLight(self)
     }
 
     private var shadowMapInfo: ShadowMapInfo?
@@ -131,7 +131,7 @@ public final class LightNode: Node, CameraNodeDelegate {
             shadowMapInfo = current
             camera.isActive = false
         } else {
-            shadowMapInfo = sceene?.lightController.getTextureForShadow(lock: shadowSkipFrame + 1)
+            shadowMapInfo = scene?.lightController.getTextureForShadow(lock: shadowSkipFrame + 1)
             camera.isActive = true
             self.shadowMapInfo = shadowMapInfo
         }

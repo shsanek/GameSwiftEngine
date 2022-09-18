@@ -1,6 +1,6 @@
-/// Root node for sceene
+/// Root node for scene
 /// there can only be one for the hierarchy
-open class SceeneNode: Node {
+open class SceneNode: Node {
 
     let lightController = LightController()
     lazy var collisionController = CollisionController(voxelSystem: voxelsSystemController)
@@ -8,7 +8,7 @@ open class SceeneNode: Node {
     /// VoxelsSystemController
     public let voxelsSystemController = VoxelsSystemController()
 
-    public override var sceene: SceeneNode? {
+    public override var scene: SceneNode? {
         self
     }
 

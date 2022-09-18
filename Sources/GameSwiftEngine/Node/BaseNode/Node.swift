@@ -7,8 +7,8 @@ open class Node {
         storageParent
     }
 
-    /// Current - current SceeneNode or nil if hierarchy is not attached to the SceeneNode
-    public var sceene: SceeneNode? {
+    /// Current - current SceneNode or nil if hierarchy is not attached to the SceneNode
+    public var scene: SceneNode? {
         storageSceene
     }
 
@@ -133,13 +133,13 @@ open class Node {
     }
 
     private weak var storageParent: Node?
-    private weak var storageSceene: SceeneNode? {
+    private weak var storageSceene: SceneNode? {
         didSet {
-            if storageSceene === oldValue || sceene !== storageSceene {
+            if storageSceene === oldValue || scene !== storageSceene {
                 return
             }
-            subnodes.forEach { $0.storageSceene = sceene }
-            didMoveSceene(oldSceene: oldValue, sceene: sceene)
+            subnodes.forEach { $0.storageSceene = scene }
+            didMoveSceene(oldSceene: oldValue, scene: scene)
         }
     }
 
@@ -170,13 +170,13 @@ open class Node {
         animations.forEach { $0.loop(GEFloat(time)) }
     }
 
-    /// called on change sceene (rootNode)
+    /// called on change scene (rootNode)
     /// - Parameters:
-    ///   - oldSceene: if the node was already on the sceene
-    ///   - sceene: new sceene
-    open func didMoveSceene(oldSceene: SceeneNode?, sceene: SceeneNode?) {
+    ///   - oldSceene: if the node was already on the scene
+    ///   - scene: new scene
+    open func didMoveSceene(oldSceene: SceneNode?, scene: SceneNode?) {
         oldSceene?.voxelsSystemController.removeController(voxelElementController)
-        sceene?.voxelsSystemController.addController(voxelElementController)
+        scene?.voxelsSystemController.addController(voxelElementController)
     }
 }
 
@@ -293,7 +293,7 @@ extension Node {
         node.storageParent?.removeSubnode(node)
         subnodes.append(node)
         node.storageParent = self
-        node.storageSceene = sceene
+        node.storageSceene = scene
     }
 
     /// Delete node from hierarchy
@@ -352,7 +352,7 @@ extension Node {
     public func getNodesWithDirection(_ angle: GEFloat = .pi / 2) ->  [Node] {
         let z = vector_float4(0, 0, 1, 1)
         let direction = matrix_multiply(absoluteTransform, z) - vector_float4(position, 1)
-        return sceene?.voxelsSystemController.getActivableNodes(
+        return scene?.voxelsSystemController.getActivableNodes(
             in: position,
             lng: 1.5,
             direction: .init(x: direction.x, y: direction.y, z: direction.z),

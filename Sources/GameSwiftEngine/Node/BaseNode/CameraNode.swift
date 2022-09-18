@@ -29,10 +29,10 @@ public class CameraNode: Node {
         projectionMatrix = perspectiveMatrix(aspectRatio: GEFloat(size.width / size.height))
     }
 
-    public override func didMoveSceene(oldSceene: SceeneNode?, sceene: SceeneNode?) {
-        super.didMoveSceene(oldSceene: oldSceene, sceene: sceene)
+    public override func didMoveSceene(oldSceene: SceneNode?, scene: SceneNode?) {
+        super.didMoveSceene(oldSceene: oldSceene, scene: scene)
         oldSceene?.camers.removeAll(where: { $0 === self })
-        sceene?.camers.append(self)
+        scene?.camers.append(self)
     }
 }
 
