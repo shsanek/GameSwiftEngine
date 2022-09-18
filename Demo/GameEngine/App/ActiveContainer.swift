@@ -11,6 +11,7 @@ class ActiveContainer: Node, IPlayerActiveble {
         self.node = node
         super.init()
         addSubnode(node)
+        self.voxelElementController.points = [.init()]
     }
 
     func action(_ player: PlayerNode) {

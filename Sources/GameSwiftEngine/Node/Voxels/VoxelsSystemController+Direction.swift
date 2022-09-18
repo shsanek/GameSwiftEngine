@@ -8,10 +8,10 @@ extension VoxelsSystemController {
         angle: GEFloat
     ) -> [Node] {
         self.filter(in: .init(vector: position), radius: lng) { node in
-            let lng = length(node.position - position)
+            let ln = length(node.position - position)
             let direction = normalize(direction)
             let delta = node.position - position
-            return lng < lng && acos(dot(normalize(direction), normalize(-delta))) < angle
+            return ln < lng && acos(dot(normalize(direction), normalize(-delta))) < angle
         }.sorted(by: { length($0.position - position) < length($1.position - position) })
     }
 }

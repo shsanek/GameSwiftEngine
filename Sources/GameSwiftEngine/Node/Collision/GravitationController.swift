@@ -2,7 +2,7 @@ import simd
 
 public final class GravitationController {
     private var lastPosition: vector_float3?
-    private var gAcseleration: GEFloat = 3
+    private var gAcseleration: GEFloat = 1.5
     private var gSpeed: GEFloat = 0
     private var speed: vector_float3 = .zero
     private weak var node: Node?

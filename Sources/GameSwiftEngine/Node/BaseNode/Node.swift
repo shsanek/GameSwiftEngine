@@ -351,7 +351,7 @@ extension Node {
     /// - Returns: nodes sorted by distance
     public func getNodesWithDirection(_ angle: GEFloat = .pi / 2) ->  [Node] {
         let z = vector_float4(0, 0, 1, 1)
-        let direction = matrix_multiply(absoluteTransform, z) - vector_float4(position, 1)
+        let direction = matrix_multiply(absoluteTransform, z) - position.to4
         return scene?.voxelsSystemController.getActivableNodes(
             in: position,
             lng: 1.5,
