@@ -1,5 +1,4 @@
 import Foundation
-import UIKit
 import MetalKit
 
 public final class Texture: ITexture, IMetalTexture {
@@ -118,6 +117,9 @@ extension Texture {
     }
 }
 
+#if canImport(UIKit)
+import UIKit
+
 public extension Texture {
     static func load(in file: String) -> Texture? {
         guard let image = UIImage(named: file)?.cgImage else {
@@ -126,3 +128,19 @@ public extension Texture {
         return load(with: image)
     }
 }
+
+#endif
+
+#if canImport(Cocoa)
+import Cocoa
+
+public extension Texture {
+    static func load(in file: String) -> Texture? {
+        guard let image = NSImage(named: file)?.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            return nil
+        }
+        return load(with: image)
+    }
+}
+
+#endif

@@ -9,10 +9,13 @@ import SwiftUI
 import simd
 import GameSwiftEngine
 
-struct ContentView: View {
+public struct ContentView: View {
     let state = GameState()
 
-    var body: some View {
+    public init() {
+    }
+
+    public var body: some View {
         ZStack {
             SwiftUIView {
                 state.view
