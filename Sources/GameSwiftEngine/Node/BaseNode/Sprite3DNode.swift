@@ -52,6 +52,4 @@ public final class Sprite3DNode: Node {
         self.encoder = encoder
         addRenderInput(encoder)
     }
-
-
 }
