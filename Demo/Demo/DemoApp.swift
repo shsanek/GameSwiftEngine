@@ -1,14 +1,15 @@
 //
-//  GameEngineApp.swift
-//  GameEngine
+//  DemoApp.swift
+//  Demo
 //
-//  Created by Alex Shipin on 12.09.2022.
+//  Created by Alex Shipin on 20.09.2022.
 //
 
 import SwiftUI
+import App
 
 @main
-struct GameEngineApp: App {
+struct DemoApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
