@@ -105,3 +105,23 @@ public final class VoxelElementController {
         delegate?.setNeedUpdate(controller: self)
     }
 }
+
+extension VoxelElementController {
+    public struct Model: Codable {
+        public var points: Set<VoxelCoordinate?> = []
+        public var groups: Set<UnvoxelGroupIdentifer> = []
+
+        public init() {
+        }
+
+        public func fill(_ controller: VoxelElementController) {
+            controller.groups = groups
+            controller.points = points
+        }
+
+        public mutating func save(_ controller: VoxelElementController) {
+            self.points = controller.points
+            self.groups = controller.savedGroups
+        }
+    }
+}

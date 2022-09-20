@@ -1,6 +1,6 @@
 import simd
 
-public struct StaticCollisionPlane {
+public struct StaticCollisionPlane: Codable {
     public let transform: matrix_float4x4
     public let size: vector_float2
 

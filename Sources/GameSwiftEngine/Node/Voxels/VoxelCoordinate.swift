@@ -1,6 +1,6 @@
 import simd
 
-public struct VoxelCoordinate: Hashable {
+public struct VoxelCoordinate: Hashable, Codable {
     public var x: Int = 0
     public var y: Int = 0
     public var z: Int = 0
