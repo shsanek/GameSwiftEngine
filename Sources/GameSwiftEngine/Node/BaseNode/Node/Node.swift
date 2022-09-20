@@ -1,7 +1,11 @@
 import simd
 
 /// Base building block for you app
-open class Node {
+open class Node: ITypeIdentifieble {
+    open var typeIdentifier: String {
+        return "Node"
+    }
+
     /// Parent - current parent node or nil if not contained in hierarchy
     public var parent: Node? {
         storageParent
@@ -385,55 +389,3 @@ extension Node {
         return controller
     }
 }
-
-
-public protocol TypeIdentifieble {
-    var typeIdentifier: String { get }
-}
-
-public protocol LoadManger {
-    func load<Type>(_ link: ObjectLink) throws -> Type
-    func save(_ link: ObjectLink, object: TypeIdentifieble) throws
-}
-
-extension Node {
-    public struct Model: Codable {
-        public var isHidden: Bool = false
-        public var firstMatrix: matrix_float4x4 = .init(1)
-        public var scaleMatrix: matrix_float4x4 = .init(1)
-        public var rotateMatrix: matrix_float4x4 = .init(1)
-        public var positionMatrix: matrix_float4x4 = .init(1)
-        public var lastMatrix: matrix_float4x4 = .init(1)
-        public var voxelElementController: VoxelElementController.Model = .init()
-        public var subnodes: [ObjectLink] = []
-        public var staticCollisionElement: StaticCollisionElement.Model = .init()
-        public var dynamicCollisionElement: DynamicCollisionElement.Model = .init()
-
-        public init() { }
-
-        public func fill(
-            _ node: Node,
-            manager: LoadManger
-        ) throws {
-            node.isHidden = isHidden
-            node.firstMatrix = firstMatrix
-            node.scaleMatrix = scaleMatrix
-            node.rotateMatrix = rotateMatrix
-            node.positionMatrix = positionMatrix
-            node.lastMatrix = lastMatrix
-            voxelElementController.fill(node.voxelElementController)
-            staticCollisionElement.fill(&node.staticCollisionElement)
-            dynamicCollisionElement.fill(&node.dynamicCollisionElement)
-            try subnodes.forEach { link in
-                node.addSubnode(try manager.load(link))
-            }
-        }
-
-        public mutating func save(
-            _ node: Node,
-            manager: LoadManger
-        ) {
-        }
-    }
-}
-
