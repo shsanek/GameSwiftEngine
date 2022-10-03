@@ -18,3 +18,15 @@ extension matrix_float4x4: Codable {
         try encoder.encode(model)
     }
 }
+
+extension vector_float4 {
+    var xyz: vector_float3 {
+        return .init(x, y, z)
+    }
+}
+
+extension vector_float3 {
+    var to4: vector_float4 {
+        return .init(x, y, z, 1)
+    }
+}

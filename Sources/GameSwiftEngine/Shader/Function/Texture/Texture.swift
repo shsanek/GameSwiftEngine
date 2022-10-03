@@ -1,15 +1,17 @@
 import Foundation
 import MetalKit
 
-public final class Texture: ITexture, IMetalTexture {
+public final class Texture: ITexture, IMetalTexture, ISourceTexture {
     let data: [UInt8]
     public let width: Int
     public let height: Int
+    public let sourcePath: String?
 
-    public init(data: [UInt8], width: Int, height: Int) {
+    public init(data: [UInt8], width: Int, height: Int, sourcePath: String? = nil) {
         self.data = data
         self.width = width
         self.height = height
+        self.sourcePath = sourcePath
     }
 
     /// METAL
@@ -76,7 +78,7 @@ final class MLTextureCache {
 }
 
 extension Texture {
-    static func load(with image: CGImage) -> Texture? {
+    static func load(with image: CGImage, sourcePath: String? = nil) -> Texture? {
         let height = image.height
         let widht = image.width
 
@@ -113,7 +115,7 @@ extension Texture {
             result[pixelCount * 4 - 1 - (j + 2)] = g
             result[pixelCount * 4 - 1 - (j + 3)] = b
         }
-        return Texture(data: result, width: widht, height: height)
+        return Texture(data: result, width: widht, height: height, sourcePath: sourcePath)
     }
 }
 
@@ -121,11 +123,11 @@ extension Texture {
 import UIKit
 
 public extension Texture {
-    static func load(in file: String) -> Texture? {
-        guard let image = UIImage(named: file)?.cgImage else {
+    static func load(in file: String?) -> Texture? {
+        guard let file = file, let image = UIImage(named: file)?.cgImage else {
             return nil
         }
-        return load(with: image)
+        return load(with: image, sourcePath: file)
     }
 }
 
@@ -135,11 +137,11 @@ public extension Texture {
 import Cocoa
 
 public extension Texture {
-    static func load(in file: String) -> Texture? {
-        guard let image = NSImage(named: file)?.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+    static func load(in file: String?) -> Texture? {
+        guard let file = file, let image = NSImage(named: file)?.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             return nil
         }
-        return load(with: image)
+        return load(with: image, sourcePath: file)
     }
 }
 

@@ -1,22 +1,22 @@
 import simd
 
 public extension InterQuakeImporter {
-    struct BoneTransform {
+    struct BoneTransform: Codable {
         public let translate: vector_float3
         public let quaternion: vector_float4
         public let scale: vector_float3
     }
 
-    struct Bone {
+    struct Bone: Codable {
         public let transform: BoneTransform
         public let parent: Int
         public let name: String
     }
 
     /// Vertex
-    struct Vertex {
+    struct Vertex: Codable {
         /// Info of bone
-        public struct Binding {
+        public struct Binding: Codable {
             let index: Int
             let power: GEFloat
         }
@@ -31,20 +31,20 @@ public extension InterQuakeImporter {
     }
 
     /// Triangle polygon
-    struct Poligon {
+    struct Poligon: Codable {
         public let a: Int
         public let b: Int
         public let c: Int
     }
 
     /// Animation frame (pose)
-    struct Frame {
+    struct Frame: Codable {
         public let bones: [Bone]
     }
 
     /// QIE model, contaned geometry, uv and animation info
     /// dV = Sum(binding { bone.matrix \* originalBone.matrix \* V \* width })
-    struct Object {
+    struct Object: Codable {
         public let poligons: [Poligon]
         public let frame: [Frame]
         public let vertex: [Vertex]

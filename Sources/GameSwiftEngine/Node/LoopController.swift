@@ -21,6 +21,7 @@ public final class LoopController {
         let delta = lastTime.flatMap { time - $0 } ?? 0
         lastTime = time
 
+        node.updatePool.clear()
         node.voxelsSystemController.loop()
         try Node.updateLoop(
             node: node,
@@ -30,6 +31,10 @@ public final class LoopController {
         node.voxelsSystemController.loop()
         node.collisionController.loop()
         node.lightController.calculatePosition()
+
+        for node in node.updatePool.nodes {
+            node.value.updateObjectControllers()
+        }
 
         for camera in node.camers {
             if camera.isActive && camera !== node.mainCamera {
@@ -99,10 +104,17 @@ public final class LoopController {
         let camera = camera ?? node.mainCamera
 
         encoder.setDepthStencilState(depthState)
+        encoder.setFrontFacing(.clockwise)
+        encoder.setCullMode(.back)
 
         buffer.label = UUID().uuidString
 
-        let input = MetalRenderInput(
+        let cameraMatrix = matrix_multiply(
+            camera.projectionMatrix,
+            camera.absoluteTransform.inverse
+        )
+
+        var input = MetalRenderInput(
             time: 0.1,
             device: device,
             descriptor: descriptor,
@@ -110,7 +122,7 @@ public final class LoopController {
             size: .init(x: GEFloat(size.width), y: GEFloat(size.height)),
             attributes: camera.renderInfo.renderAttributes,
             functionCache: functions,
-            projectionMatrix: perspectiveMatrix(aspectRatio: GEFloat(size.width / size.height)),
+            projectionMatrix: cameraMatrix,
             lightInfo: node.lightController.lightInfo
         )
 
@@ -123,21 +135,20 @@ public final class LoopController {
             zfar: 1
         )
 
-
         encoder.setViewport(viewPort)
 
         var outputError: Error?
         do {
-            let cameraMatrix = matrix_multiply(
-                camera.projectionMatrix,
-                camera.absoluteTransform.inverse
-            )
-            try Node.metalLoop(
-                camera: camera,
-                node: node,
-                cameraMatrix: cameraMatrix,
-                renderInput: input
-            )
+            for array in node.objects3DArraysManager.arrays {
+                try array.value.run(input: input)
+            }
+            for node in node.renderPool.nodes {
+                try Node.metalRender(
+                    camera: camera,
+                    node: node.value,
+                    renderInput: input
+                )
+            }
         }
         catch {
             outputError = error

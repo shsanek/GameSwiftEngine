@@ -2,6 +2,8 @@ import simd
 
 /// Node light source
 public final class LightNode: Node, CameraNodeDelegate {
+    public override var typeIdentifier: String { "LightNode" }
+
     let provider = LightProvider()
 
     private let camera: CameraNode = CameraNode()
@@ -80,7 +82,7 @@ public final class LightNode: Node, CameraNodeDelegate {
 
 
     /// The number of frames to skip when drawing a dynamic shadow
-    public var shadowSkipFrame: Int = 2 {
+    public var shadowSkipFrame: Int = 5 {
         didSet {
             if shadowSkipFrame < 0 {
                 shadowSkipFrame = 0

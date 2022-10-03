@@ -4,3 +4,10 @@ public func convert<T>(_ object: Any) throws -> T {
     }
     return result
 }
+
+public func notNil<T>(_ object: T?, message: String = "object not load") throws -> T {
+    guard let result = object else {
+        throw StorageError.baseError(message)
+    }
+    return result
+}

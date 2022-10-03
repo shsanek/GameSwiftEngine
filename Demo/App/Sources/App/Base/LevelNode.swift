@@ -82,6 +82,12 @@ class LevelNode: Node {
     }
 
     private func empty(for x: Int, y: Int, map: [[RawMapTitle]]) -> MapTitle {
+        addTop(x: x, y: y)
+        addBottom(x: x, y: y)
+        return .empty
+    }
+
+    private func addTop(x: Int, y: Int) {
         emptyTops.vertexs.values.append(
             contentsOf: rect(
                 .init(
@@ -92,21 +98,23 @@ class LevelNode: Node {
                 )
             )
         )
+    }
+
+    private func addBottom(x: Int, y: Int) {
         emptyBottoms.vertexs.values.append(
             contentsOf: rect(
                 .init(
-                    a: .init(x: GEFloat(x) - 0.5, y: -0.5, z: GEFloat(y) - 0.5),
-                    b: .init(x: GEFloat(x) - 0.5, y: -0.5, z: GEFloat(y) + 0.5),
-                    c: .init(x: GEFloat(x) + 0.5, y: -0.5, z: GEFloat(y) + 0.5),
-                    d: .init(x: GEFloat(x) + 0.5, y: -0.5, z: GEFloat(y) - 0.5)
+                    a: .init(x: GEFloat(x) + 0.5, y: -0.5, z: GEFloat(y) - 0.5),
+                    b: .init(x: GEFloat(x) + 0.5, y: -0.5, z: GEFloat(y) + 0.5),
+                    c: .init(x: GEFloat(x) - 0.5, y: -0.5, z: GEFloat(y) + 0.5),
+                    d: .init(x: GEFloat(x) - 0.5, y: -0.5, z: GEFloat(y) - 0.5)
                 )
             )
         )
-
-        return .empty
     }
 
     private func wall(for x: Int, y: Int, map: [[RawMapTitle]]) -> MapTitle {
+        let rotate0 = rotationMatrix4x4(radians: .pi, axis: .init(x: 1, y: 0, z: 0))
         let rotate1 = rotationMatrix4x4(radians: .pi / 2.0, axis: .init(x: 1, y: 0, z: 0))
         var scale = matrix_float4x4(0.5)
         scale[3][3] = 1
@@ -116,7 +124,7 @@ class LevelNode: Node {
             let transform = translationMatrix4x4(x, 0, y)
             var matrix = matrix_multiply(rotate2, baseTransform)
             matrix = matrix_multiply(transform, matrix)
-            if let obj = self.wallGeometry?.geometryForInput(with: matrix) {
+            if let obj = self.wallGeometry?.geometryForInput(with: matrix * rotate0) {
                 walls.vertexs.values.append(contentsOf: obj)
             }
             let node = WallNode()
@@ -154,26 +162,8 @@ class LevelNode: Node {
         node.move(to: .init(x: GEFloat(x), y: 0, z: GEFloat(y)))
         addSubnode(node)
 
-        emptyBottoms.vertexs.values.append(
-            contentsOf: rect(
-                .init(
-                    a: .init(x: GEFloat(x) - 0.5, y: -0.5, z: GEFloat(y) - 0.5),
-                    b: .init(x: GEFloat(x) - 0.5, y: -0.5, z: GEFloat(y) + 0.5),
-                    c: .init(x: GEFloat(x) + 0.5, y: -0.5, z: GEFloat(y) + 0.5),
-                    d: .init(x: GEFloat(x) + 0.5, y: -0.5, z: GEFloat(y) - 0.5)
-                )
-            )
-        )
-        emptyTops.vertexs.values.append(
-            contentsOf: rect(
-                .init(
-                    a: .init(x: GEFloat(x) - 0.5, y: 0.5, z: GEFloat(y) - 0.5),
-                    b: .init(x: GEFloat(x) - 0.5, y: 0.5, z: GEFloat(y) + 0.5),
-                    c: .init(x: GEFloat(x) + 0.5, y: 0.5, z: GEFloat(y) + 0.5),
-                    d: .init(x: GEFloat(x) + 0.5, y: 0.5, z: GEFloat(y) - 0.5)
-                )
-            )
-        )
+        addBottom(x: x, y: y)
+        addTop(x: x, y: y)
         return .door(door)
     }
 
@@ -183,16 +173,7 @@ class LevelNode: Node {
         node.move(to: .init(x: GEFloat(x), y: 0, z: GEFloat(y)))
         addSubnode(node)
 
-        emptyBottoms.vertexs.values.append(
-            contentsOf: rect(
-                .init(
-                    a: .init(x: GEFloat(x) - 0.5, y: -0.51, z: GEFloat(y) - 0.5),
-                    b: .init(x: GEFloat(x) - 0.5, y: -0.51, z: GEFloat(y) + 0.5),
-                    c: .init(x: GEFloat(x) + 0.5, y: -0.51, z: GEFloat(y) + 0.5),
-                    d: .init(x: GEFloat(x) + 0.5, y: -0.51, z: GEFloat(y) - 0.5)
-                )
-            )
-        )
+        addBottom(x: x, y: y)
         return .lift(lift)
     }
 }
@@ -233,7 +214,7 @@ extension Node {
                 d: .init(x: GEFloat(x) + size.width / 2, y: level - 0.5, z: GEFloat(y) - size.height / 2)
             )
         )
-        let node = Sprite3DNode(vertexs: vertex, texture: texture)
+        let node = Sprite3DNode(geometry: .vertexs(vertex), texture: texture)
         addSubnode(node)
         if collision {
             let matrix = translationMatrix4x4(GEFloat(x), level - 0.5, GEFloat(y))
@@ -247,7 +228,7 @@ extension Node {
         return node
     }
 
-    func rect(_ rect: Rect3D, uv: Rect2D = Rect2D()) -> [Sprite3DInput.VertexInput] {
+    func rect(_ rect: Rect3D, uv: Rect2D = Rect2D()) -> [VertexInput] {
         [
             .init(position: rect.a, uv: uv.a),
             .init(position: rect.b, uv: uv.b),

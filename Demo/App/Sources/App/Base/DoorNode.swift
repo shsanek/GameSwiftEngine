@@ -20,17 +20,17 @@ class DoorNode: Node, INodeActive {
         let encoder = Sprite3DInput(
             texture: texture,
             vertexs: [
-                .init(position: .init(x: -x, y: -y, z: -z), uv: .init(0, 0)),
-                .init(position: .init(x: -x, y: y, z: -z), uv: .init(0, 1)),
                 .init(position: .init(x: x, y: y, z: -z), uv: .init(1, 1)),
+                .init(position: .init(x: -x, y: y, z: -z), uv: .init(0, 1)),
+                .init(position: .init(x: -x, y: -y, z: -z), uv: .init(0, 0)),
 
                 .init(position: .init(x: -x, y: -y, z: -z), uv: .init(0, 0)),
                 .init(position: .init(x: x, y: -y, z: -z), uv: .init(1, 0)),
                 .init(position: .init(x: x, y: y, z: -z), uv: .init(1, 1)),
 
-                .init(position: .init(x: -x, y: -y, z: z), uv: .init(0, 0)),
-                .init(position: .init(x: -x, y: y, z: z), uv: .init(0, 1)),
                 .init(position: .init(x: x, y: y, z: z), uv: .init(1, 1)),
+                .init(position: .init(x: -x, y: y, z: z), uv: .init(0, 1)),
+                .init(position: .init(x: -x, y: -y, z: z), uv: .init(0, 0)),
 
                 .init(position: .init(x: -x, y: -y, z: z), uv: .init(0, 0)),
                 .init(position: .init(x: x, y: -y, z: z), uv: .init(1, 0)),

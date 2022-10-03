@@ -36,7 +36,7 @@ class PlayerNode: Node {
         light.color = .one
         light.move(to: .init(0.05, -0.3, 0))
         light.isShadow = true
-        light.shadowSkipFrame = 0
+        light.shadowSkipFrame = 1
         camera.addSubnode(light)
     }
 
@@ -80,5 +80,38 @@ class PlayerNode: Node {
         value.y *= -rotateSpeed
         rotate(on: value.x, axis: .init(x: dx.x, y: dx.y, z: dx.z))
         rotate(on: value.y, axis: .init(x: dy.x, y: dy.y, z: dy.z))
+    }
+}
+
+extension PlayerNode {
+    public struct Model: Codable {
+        public var node: Node.NodeModel = .init()
+        public init() { }
+    }
+}
+
+struct PlayerNodeStorageElementController: IStorageElementController {
+    var typeIdentifier: String { "PlayerNode" }
+
+    func makeDefaultModel() throws -> PlayerNode.Model {
+        PlayerNode.Model()
+    }
+
+    func makeObject(model: PlayerNode.Model, context: ILoadMangerContext) throws -> PlayerNode {
+        let node = PlayerNode()
+        try model.node.load(object: node, context: context)
+        return node
+    }
+
+    func save(
+        model: inout PlayerNode.Model,
+        object: PlayerNode,
+        context: ISaveMangerContext,
+        shouldModelUpdate: Bool
+    ) throws {
+        if shouldModelUpdate {
+            try model.node.update(with: object)
+        }
+        try model.node.saveSubobjects(object, context: context)
     }
 }

@@ -17,7 +17,11 @@ open class Node: ITypeIdentifieble {
     }
 
     /// Responsible for display, if true then ingore all renderInputs
-    open var isHidden: Bool = false
+    open var isHidden: Bool = false {
+        didSet {
+            objectControllers.forEach { $0.isHidden = true }
+        }
+    }
 
     /// First matrix for transform
     /// * see also absoluteTransform, modelMatrix
@@ -131,6 +135,7 @@ open class Node: ITypeIdentifieble {
             if absoluteTransformStorage == nil {
                 voxelElementController.setNeedPointsUpdate()
                 subnodes.forEach { $0.absoluteTransformStorage = nil }
+                scene?.updatePool.add(self)
             }
         }
     }
@@ -146,6 +151,7 @@ open class Node: ITypeIdentifieble {
         }
     }
 
+    private(set) var objectControllers: [Object3DController] = []
     private(set) var renderInputs: [AnyRenderHandler] = []
     private(set) var subnodes: [Node] = []
     private var animations: [NodeAnimationController] = []
@@ -180,6 +186,32 @@ open class Node: ITypeIdentifieble {
     open func didMoveSceene(oldSceene: SceneNode?, scene: SceneNode?) {
         oldSceene?.voxelsSystemController.removeController(voxelElementController)
         scene?.voxelsSystemController.addController(voxelElementController)
+
+        objectControllers.forEach { try? oldSceene?.objects3DArraysManager.removeController($0) }
+        objectControllers.forEach { try? scene?.objects3DArraysManager.addController($0) }
+
+        if !renderInputs.isEmpty {
+            oldSceene?.renderPool.remove(self)
+            scene?.renderPool.add(self)
+        }
+    }
+}
+
+extension Node {
+    func updateObjectControllers() {
+        objectControllers.forEach {
+            $0.modelMatrix = absoluteTransform
+        }
+    }
+
+    public func addObjectController(_ controller: Object3DController) {
+        objectControllers.append(controller)
+        try? scene?.objects3DArraysManager.addController(controller)
+    }
+
+    public func removeObjectController(_ controller: Object3DController) {
+        objectControllers.removeAll(where: { controller === $0 })
+        try? scene?.objects3DArraysManager.removeController(controller)
     }
 }
 
@@ -277,6 +309,9 @@ extension Node {
     /// See more `AnyRenderHandler`, `LoopController`
     /// - Parameter encodable: new encodable
     public func addRenderInput(_ encodable: AnyRenderHandler) {
+        if renderInputs.isEmpty {
+            scene?.renderPool.add(self)
+        }
         renderInputs.append(encodable)
     }
 
@@ -285,6 +320,9 @@ extension Node {
     /// - Parameter encodable: old encodable
     public func removeRenderInputs(_ encodable: AnyRenderHandler) {
         renderInputs.removeAll(where: { $0 === encodable })
+        if renderInputs.isEmpty {
+            scene?.renderPool.remove(self)
+        }
     }
 }
 
@@ -319,27 +357,14 @@ extension Node {
     }
 
     // METAL
-    static func metalLoop(
+    static func metalRender(
         camera: CameraNode,
         node: Node,
-        cameraMatrix: matrix_float4x4,
-        modelMatrix: matrix_float4x4 = .init(1),
         renderInput: MetalRenderInput
     ) throws {
         if node.isHidden == false {
-            let modelMatrix = matrix_multiply(modelMatrix, node.modelMatrix)
-            for node in node.subnodes {
-                try metalLoop(
-                    camera: camera,
-                    node: node,
-                    cameraMatrix: cameraMatrix,
-                    modelMatrix: modelMatrix,
-                    renderInput: renderInput
-                )
-            }
             var renderInput = renderInput
-            renderInput.projectionMatrix = cameraMatrix
-            renderInput.currentPosition = modelMatrix
+            renderInput.currentPosition = node.absoluteTransform
             for input in node.renderInputs {
                 try input.run(input: renderInput)
             }

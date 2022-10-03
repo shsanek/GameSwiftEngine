@@ -1,12 +1,12 @@
 /// Root node for scene
 /// there can only be one for the hierarchy
 open class SceneNode: Node {
-
-    let lightController = LightController()
-    lazy var collisionController = CollisionController(voxelSystem: voxelsSystemController)
+    public override var typeIdentifier: String { "SceneNode" }
 
     /// VoxelsSystemController
     public let voxelsSystemController = VoxelsSystemController()
+
+    public let objects3DArraysManager = Objects3DArraysManager()
 
     public override var scene: SceneNode? {
         self
@@ -17,6 +17,11 @@ open class SceneNode: Node {
 
     /// All camers in hierarchy
     public internal(set) var camers: [CameraNode] = []
+
+    let lightController = LightController()
+    lazy var collisionController = CollisionController(voxelSystem: voxelsSystemController)
+    let renderPool = NodePool()
+    let updatePool = NodePool()
 
     public override init() {
         super.init()

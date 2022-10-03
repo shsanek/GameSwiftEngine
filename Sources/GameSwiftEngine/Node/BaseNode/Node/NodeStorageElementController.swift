@@ -7,14 +7,14 @@ public struct NodeStorageElementController: IStorageElementController {
 
     public func makeObject(model: Node.Model, context: ILoadMangerContext) throws -> Node {
         let node = Node()
-        try model.load(object: node, context: context)
+        try model.node.load(object: node, context: context)
         return node
     }
 
     public func save(model: inout Node.Model, object: Node, context: ISaveMangerContext, shouldModelUpdate: Bool) throws {
         if shouldModelUpdate {
-            try model.update(with: object)
+            try model.node.update(with: object)
         }
-        try model.saveSubobjects(object, context: context)
+        try model.node.saveSubobjects(object, context: context)
     }
 }

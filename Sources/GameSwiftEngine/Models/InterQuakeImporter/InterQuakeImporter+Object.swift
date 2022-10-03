@@ -5,7 +5,7 @@ extension InterQuakeImporter.Object {
         poligons.flatMap { [UInt32($0.a), UInt32($0.b), UInt32($0.c)] }
     }
 
-    public func getVertexs() -> [Sprite3DInput.VertexInput] {
+    public func getVertexs() -> [VertexInput] {
         vertex.map {
             getVertex(from: $0)
         }
@@ -13,7 +13,7 @@ extension InterQuakeImporter.Object {
 
     public func getBoneTransform(
         with index: Int? = nil
-    ) -> [Sprite3DInput.BoneTransform] {
+    ) -> [BoneTransform] {
         let raws: [InterQuakeImporter.Bone]
         if let index = index, frame.count > index {
             raws = frame[index].bones
@@ -28,9 +28,9 @@ extension InterQuakeImporter.Object {
         return raws.enumerated().map { .init(transform: storage.fetch(with: $0.offset)) }
     }
 
-    func getVertex(from vertex: InterQuakeImporter.Vertex) -> Sprite3DInput.VertexInput {
-        var input = Sprite3DInput.VertexInput(position: vertex.position, uv: vertex.uv ?? .zero)
-        var binds: [Sprite3DInput.InputBoneBind] = vertex.binding.map { .init(index: Int32($0.index), width: $0.power) }
+    func getVertex(from vertex: InterQuakeImporter.Vertex) -> VertexInput {
+        var input = VertexInput(position: vertex.position, uv: vertex.uv ?? .zero)
+        var binds: [InputBoneBind] = vertex.binding.map { .init(index: Int32($0.index), width: $0.power) }
         binds = Array(binds.sorted(by: { $0.width > $1.width }).prefix(4))
         while binds.count < 4 { binds.append(.empty) }
         let sum = binds.reduce(GEFloat(0), { $0 + $1.width })

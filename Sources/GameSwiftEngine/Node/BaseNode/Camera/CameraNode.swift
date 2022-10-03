@@ -1,6 +1,8 @@
 import simd
 
 public class CameraNode: Node {
+    public override var typeIdentifier: String { "CameraNode" }
+
     public weak var delegate: CameraNodeDelegate?
 
     /// Projection matrix for render

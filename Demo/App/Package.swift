@@ -22,6 +22,10 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "App",
-            dependencies: [.product(name: "GameSwiftEngine", package: "GameSwiftEngine")])
+            dependencies: [
+                .product(name: "GameSwiftEngine", package: "GameSwiftEngine"),
+                .product(name: "SpaceEditor", package: "GameSwiftEngine")
+            ]),
+        
     ]
 )

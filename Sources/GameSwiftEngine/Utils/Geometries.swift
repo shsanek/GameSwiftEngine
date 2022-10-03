@@ -1,7 +1,7 @@
 import simd
 
 public enum Geometries {
-    public static func plane(with size: Size) -> [Sprite3DInput.VertexInput] {
+    public static func plane(with size: Size) -> [VertexInput] {
         let x = size.width / 2
         let y = size.height / 2
         return [

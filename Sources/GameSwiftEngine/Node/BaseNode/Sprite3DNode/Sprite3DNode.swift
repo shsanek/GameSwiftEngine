@@ -1,8 +1,11 @@
 import simd
 
-
 /// Simple 3d geometry object
 public final class Sprite3DNode: Node {
+    public override var typeIdentifier: String {
+        return "Sprite3DNode"
+    }
+
     /// Current texture
     public var texture: ITexture? {
         didSet {
@@ -10,6 +13,7 @@ public final class Sprite3DNode: Node {
         }
     }
     private var encoder: Sprite3DInput?
+    private var Sprite3DNodeGeometrySource: Sprite3DNodeGeometrySource?
 
     /// Create plane object
     /// - Parameters:
@@ -17,10 +21,9 @@ public final class Sprite3DNode: Node {
     ///   - size: size plane
     public init(texture: ITexture?, size: Size) {
         super.init()
-        reloadVertexs(Geometries.plane(with: size))
+        reloadVertexs(.plane(size))
         self.texture = texture
     }
-
 
     /// Create plane object
     /// Use importers for generate vertexs example `ObjImporter`
@@ -28,11 +31,11 @@ public final class Sprite3DNode: Node {
     ///   - vertexs: vertexs
     ///   - size: size plane
     public init(
-        vertexs: [Sprite3DInput.VertexInput],
+        geometry: Sprite3DNodeGeometrySource,
         texture: Texture?
     ) {
         super.init()
-        reloadVertexs(vertexs)
+        reloadVertexs(geometry)
         self.texture = texture
     }
 
@@ -42,14 +45,27 @@ public final class Sprite3DNode: Node {
     ///   - vertexs: vertexs
     ///   - size: size plane
     public func reloadVertexs(
-        _ vertexs: [Sprite3DInput.VertexInput]
+        _ geometry: Sprite3DNodeGeometrySource
     ) {
         encoder.flatMap { removeRenderInputs($0) }
+        guard let vertex = geometry.onlyVertexs else {
+            return
+        }
         let encoder = Sprite3DInput(
             texture: texture,
-            vertexs: vertexs
+            vertexs: vertex
         )
+        self.Sprite3DNodeGeometrySource = geometry.light
         self.encoder = encoder
         addRenderInput(encoder)
+    }
+
+    public func getSprite3DNodeGeometrySource() -> Sprite3DNodeGeometrySource {
+        switch Sprite3DNodeGeometrySource {
+        case .vertexs:
+            return encoder.flatMap { .vertexs($0.vertexs.values) } ?? .empty
+        default:
+            return Sprite3DNodeGeometrySource ?? .empty
+        }
     }
 }

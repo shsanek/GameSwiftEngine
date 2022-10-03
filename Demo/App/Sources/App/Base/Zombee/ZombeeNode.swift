@@ -11,7 +11,7 @@ final class ZombeeNode: Node {
         guard let object = ZombeeNode.object else {
             return
         }
-        let node = Object3DNode(object: object, texture: Texture.load(in: "SUPPORT_7C"))
+        let node = Object3DNode(source: .object(object), texture: Texture.load(in: "SUPPORT_7C"))
         var animation = NodeAnimation.updateFrames((0..<node.frameCount).map { $0 })
         animation.duration = 3
         animation.animationFunction = .default

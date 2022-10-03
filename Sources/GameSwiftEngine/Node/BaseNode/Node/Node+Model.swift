@@ -3,6 +3,14 @@ import simd
 
 extension Node {
     public struct Model: Codable {
+        public var node: NodeModel = .init()
+
+        public init(node: NodeModel = .init()) {
+            self.node = node
+        }
+    }
+
+    public struct NodeModel: Codable {
         public var isHidden: Bool = false
         public var firstMatrix: matrix_float4x4 = .init(1)
         public var scaleMatrix: matrix_float4x4 = .init(1)
