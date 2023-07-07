@@ -1,7 +1,8 @@
 import GameSwiftEngine
+import Foundation
 
 final class ZombeeNode: Node {
-    static let object = InterQuakeImporter.loadFile("zombee")
+    static let object = InterQuakeImporter.loadFile("Resources/Objects/zombee", bundle: Bundle.module)
     override init() {
         super.init()
         loadModel()
@@ -11,7 +12,7 @@ final class ZombeeNode: Node {
         guard let object = ZombeeNode.object else {
             return
         }
-        let node = Object3DNode(source: .object(object), texture: Texture.load(in: "SUPPORT_7C"))
+        let node = Object3DNode(source: .object(object), texture: Texture.load(in: "Resources/Textures/SUPPORT_7C.png", bundle: Bundle.module))
         var animation = NodeAnimation.updateFrames((0..<node.frameCount).map { $0 })
         animation.duration = 3
         animation.animationFunction = .default

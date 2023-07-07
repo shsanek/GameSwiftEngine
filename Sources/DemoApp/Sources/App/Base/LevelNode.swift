@@ -1,5 +1,6 @@
 import simd
 import GameSwiftEngine
+import Foundation
 
 class LevelNode: Node {
     enum RawMapTitle: String {
@@ -19,12 +20,12 @@ class LevelNode: Node {
     }
 
     private(set) var map: [[MapTitle]] = []
-    let walls = Sprite3DInput(texture: Texture.load(in: "TECH_0F"), vertexs: [])
-    let emptyBottoms = Sprite3DInput(texture: Texture.load(in: "RIVET_1A"), vertexs: [])
-    let emptyTops = Sprite3DInput(texture: Texture.load(in: "CRATE_2L"), vertexs: [])
+    let walls = Sprite3DInput(texture: Texture.load(in: "Resources/Textures/TECH_0F.png", bundle: Bundle.module), vertexs: [])
+    let emptyBottoms = Sprite3DInput(texture: Texture.load(in: "Resources/Textures/RIVET_1A.png", bundle: Bundle.module), vertexs: [])
+    let emptyTops = Sprite3DInput(texture: Texture.load(in: "Resources/Textures/CRATE_2L.png", bundle: Bundle.module), vertexs: [])
 
 
-    let wallGeometry = ObjImporter.loadFile("wall_tech")
+    let wallGeometry = ObjImporter.loadFile("Resources/Objects/wall_tech", bundle: Bundle.module)
 
     init(text: String) {
         super.init()

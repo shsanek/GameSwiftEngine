@@ -137,11 +137,17 @@ public extension Texture {
 import Cocoa
 
 public extension Texture {
-    static func load(in file: String?) -> Texture? {
-        guard let file = file, let image = NSImage(named: file)?.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+    static func load(in name: String, bundle: Bundle) -> Texture? {
+        guard let url = bundle.url(forResource: name, withExtension: "") else {
             return nil
         }
-        return load(with: image, sourcePath: file)
+        guard let data = try? Data(contentsOf: url) else {
+            return nil
+        }
+        guard let image = NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            return nil
+        }
+        return load(with: image, sourcePath: name)
     }
 }
 

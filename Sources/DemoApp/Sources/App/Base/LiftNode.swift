@@ -1,4 +1,5 @@
 import GameSwiftEngine
+import Foundation
 
 class LiftNode: Node, INodeActive {
     enum State {
@@ -8,7 +9,7 @@ class LiftNode: Node, INodeActive {
 
     var state: State = .down
 
-    private lazy var platform = addBottomRectNode(texture: .load(in: "STEEL_2B"))
+    private lazy var platform = addBottomRectNode(texture: .load(in: "Resources/Textures/STEEL_2B.png", bundle: Bundle.module))
 
     override init() {
         super.init()

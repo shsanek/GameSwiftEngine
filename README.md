@@ -64,8 +64,6 @@ let object = Sprite3DNode(texture: texture, size: .init(1, 1)) // generate plane
 sceneNode.addSubnode(object)
 ```
 
-DONE!!
-
 ### BaseNode
 
 - `Node` - base node

@@ -211,12 +211,11 @@ public final class InterQuakeImporter {
     }
 }
 
-
 import Foundation
 
 extension InterQuakeImporter {
-    public static func loadFile(_ name: String) -> Object? {
-        guard let url = Bundle.main.url(forResource: name, withExtension: "iqe") else {
+    public static func loadFile(_ name: String, bundle: Bundle) -> Object? {
+        guard let url = bundle.url(forResource: name, withExtension: "iqe") else {
             return nil
         }
         guard let data = try? Data(contentsOf: url) else {

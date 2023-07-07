@@ -28,6 +28,15 @@ public final class MirrorNode: Node, CameraNodeDelegate {
         //camera.rotate(to: -.pi / 2, axis: .init(0, 1, 0))
         self.plane.rotate(to: -.pi / 2, axis: .init(0, 1, 0))
         addSubnode(self.plane)
+
+//        let node = Node()
+//        let input = Sprite3DInput(
+//            texture: Texture.load(in: "CONCRETE_1B"),
+//            vertexs: GeometryContainer.plane.vertexes
+//        )
+//        node.addRenderInput(input)
+//        planeInput.vertexIndexs.values = GeometryContainer.plane.indexes
+//        camera.addSubnode(node)
     }
 
     public override func loop(_ time: Double, size: Size) throws {
@@ -42,7 +51,7 @@ public final class MirrorNode: Node, CameraNodeDelegate {
         let a1 = normalize(cameraPosition)
         let b1 = normalize(reflection)
         let angle = atan2(a1.x, a1.z) - atan2(b1.x, b1.z)
-        camera.rotate(to: -angle / 2, axis: .init(x: 0, y: 1, z: 0))
+        camera.rotate(to: angle, axis: .init(x: 0, y: 1, z: 0))
     }
 
     public func didUpdateRenderResault(_ camera: CameraNode) {

@@ -1,5 +1,6 @@
 import simd
 import GameSwiftEngine
+import Foundation
 
 class DoorNode: Node, INodeActive {
     enum State {
@@ -11,7 +12,7 @@ class DoorNode: Node, INodeActive {
 
     private let texture: Texture?
 
-    init(texture: Texture? = Texture.load(in: "1")) {
+    init(texture: Texture? = Texture.load(in: "Resources/Textures/DOOR_2B.png", bundle: Bundle.module)) {
         self.texture = texture
         super.init()
         let x: GEFloat = 0.5
@@ -28,13 +29,13 @@ class DoorNode: Node, INodeActive {
                 .init(position: .init(x: x, y: -y, z: -z), uv: .init(1, 0)),
                 .init(position: .init(x: x, y: y, z: -z), uv: .init(1, 1)),
 
-                .init(position: .init(x: x, y: y, z: z), uv: .init(1, 1)),
+                .init(position: .init(x: -x, y: -y, z: z), uv: .init(0, 0)),
                 .init(position: .init(x: -x, y: y, z: z), uv: .init(0, 1)),
-                .init(position: .init(x: -x, y: -y, z: z), uv: .init(0, 0)),
+                .init(position: .init(x: x, y: y, z: z), uv: .init(1, 1)),
 
-                .init(position: .init(x: -x, y: -y, z: z), uv: .init(0, 0)),
+                .init(position: .init(x: x, y: y, z: z), uv: .init(1, 1)),
                 .init(position: .init(x: x, y: -y, z: z), uv: .init(1, 0)),
-                .init(position: .init(x: x, y: y, z: z), uv: .init(1, 1))
+                .init(position: .init(x: -x, y: -y, z: z), uv: .init(0, 0))
             ]
         )
         addRenderInput(encoder)
@@ -45,7 +46,7 @@ class DoorNode: Node, INodeActive {
         let light = LightNode()
         light.power = 0.05
         light.color = .init(x: 1, y: 0, z: 0)
-        //addSubnode(light)
+        addSubnode(light)
         light.move(to: .init(0, 0.5, 0))
     }
 

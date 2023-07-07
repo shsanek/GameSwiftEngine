@@ -1,10 +1,12 @@
 import simd
 
 /// Base building block for you app
-open class Node: ITypeIdentifieble {
+open class Node {
     open var typeIdentifier: String {
-        return "Node"
+        return "\(type(of: self).self)"
     }
+
+    public var identifier: String?
 
     /// Parent - current parent node or nil if not contained in hierarchy
     public var parent: Node? {

@@ -11,21 +11,21 @@ let package = Package(
             name: "GameSwiftEngine",
             targets: ["GameSwiftEngine"]
         ),
-        .library(
-            name: "SpaceEditor",
-            targets: ["SpaceEditor"]
-        )
+        .executable(name: "DemoApp", targets: ["DemoApp"])
     ],
     dependencies: [
     ],
     targets: [
+        .executableTarget(
+            name: "DemoApp",
+            dependencies: ["GameSwiftEngine"],
+            resources: [
+                .copy("Resources"),
+            ]
+        ),
         .target(
             name: "GameSwiftEngine",
             dependencies: []
-        ),
-        .target(
-            name: "SpaceEditor",
-            dependencies: [.target(name: "GameSwiftEngine")]
         )
     ]
 )
