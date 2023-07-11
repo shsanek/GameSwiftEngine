@@ -9,7 +9,8 @@ final class MainNode: SceneNode {
     }
 
     private func addObject() {
-        let player = PlayerNode(camera: mainCamera)
+        let player = PlayerNode()
+        scene?.mainCamera = player.camera
         self.player = player
         player.move(to: .init(x: -7, y: 0, z: -1))
         player.rotate(to: -.pi / 3 * 2, axis: .init(0, 1, 0))

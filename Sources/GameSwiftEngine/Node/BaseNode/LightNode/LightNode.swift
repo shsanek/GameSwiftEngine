@@ -2,8 +2,6 @@ import simd
 
 /// Node light source
 public final class LightNode: Node, CameraNodeDelegate {
-    public override var typeIdentifier: String { "LightNode" }
-
     let provider = LightProvider()
 
     private let camera: CameraNode = CameraNode()

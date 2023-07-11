@@ -1,12 +1,11 @@
 import simd
+import ObjectEditor
 
 /// Base building block for you app
 open class Node {
-    open var typeIdentifier: String {
-        return "\(type(of: self).self)"
-    }
-
-    public var identifier: String?
+    public var omIdentifier: String?
+    public var omModifications: [IAnyOMModification] = []
+    public var omIgnore: Bool = false
 
     /// Parent - current parent node or nil if not contained in hierarchy
     public var parent: Node? {
@@ -228,11 +227,16 @@ extension Node {
     /// Global position in node
     ///  `position = absoluteTransform * .zero`
     public var localPosition: vector_float3 {
-        .init(
-            x: positionMatrix[3][0],
-            y: positionMatrix[3][1],
-            z: positionMatrix[3][2]
-        )
+        get {
+            .init(
+                x: positionMatrix[3][0],
+                y: positionMatrix[3][1],
+                z: positionMatrix[3][2]
+            )
+        }
+        set {
+            move(to: newValue)
+        }
     }
 
     /// Change local position
@@ -251,6 +255,18 @@ extension Node {
 }
 
 extension Node {
+    public var localRotate: vector_float3 {
+        get {
+            .zero
+        }
+        set {
+            rotateMatrix = rotationMatrix4x4(radians: 0, axis: .one)
+            rotate(on: newValue.x, axis: .init(x: 1, y: 0, z: 0))
+            rotate(on: newValue.y, axis: .init(x: 0, y: 1, z: 0))
+            rotate(on: newValue.z, axis: .init(x: 0, y: 0, z: 1))
+        }
+    }
+
     /// Change local rotate
     /// Fully replace rotateMatrix
     /// - Parameters:
@@ -274,11 +290,16 @@ extension Node {
 extension Node {
     /// Local scale
     public var scale: vector_float3 {
-        .init(
-            x: scaleMatrix[0][0],
-            y: scaleMatrix[1][1],
-            z: scaleMatrix[2][2]
-        )
+        get {
+            .init(
+                x: scaleMatrix[0][0],
+                y: scaleMatrix[1][1],
+                z: scaleMatrix[2][2]
+            )
+        }
+        set {
+            scale(to: newValue)
+        }
     }
 
     /// Change scale
@@ -414,5 +435,23 @@ extension Node {
         }
         animations.append(controller)
         return controller
+    }
+}
+
+extension Node: IOMNode {
+    
+    public var omSubnodes: [IOMNode] {
+        subnodes.map { $0 as IOMNode }
+    }
+
+    public func omAddSubnode(_ node: IOMNode) throws {
+        guard let obj = node as? Node else {
+            throw EditorError.message("`\(type(of: node))` is not `Node`")
+        }
+        addSubnode(obj)
+    }
+
+    public func omRemoveFromSupernode() throws {
+        removeFromParent()
     }
 }

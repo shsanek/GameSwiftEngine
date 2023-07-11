@@ -2,10 +2,6 @@ import simd
 
 /// Simple 3d geometry object
 public final class Sprite3DNode: Node {
-    public override var typeIdentifier: String {
-        return "Sprite3DNode"
-    }
-
     /// Current texture
     public var texture: ITexture? {
         didSet {

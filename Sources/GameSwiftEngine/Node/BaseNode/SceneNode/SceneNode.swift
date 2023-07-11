@@ -1,11 +1,8 @@
 /// Root node for scene
 /// there can only be one for the hierarchy
 open class SceneNode: Node {
-    public override var typeIdentifier: String { "SceneNode" }
-
     /// VoxelsSystemController
     public let voxelsSystemController = VoxelsSystemController()
-
     public let objects3DArraysManager = Objects3DArraysManager()
 
     public override var scene: SceneNode? {

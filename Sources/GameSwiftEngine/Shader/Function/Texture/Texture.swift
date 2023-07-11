@@ -144,10 +144,14 @@ public extension Texture {
         guard let data = try? Data(contentsOf: url) else {
             return nil
         }
+        return load(in: data)
+    }
+
+    static func load(in data: Data) -> Texture? {
         guard let image = NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             return nil
         }
-        return load(with: image, sourcePath: name)
+        return load(with: image)
     }
 }
 

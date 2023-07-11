@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import GameSwiftDemo
 
 @available(macOS 10.15, *)
 class WindowDelegate: NSObject, NSWindowDelegate {
@@ -38,8 +39,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 }
-
-print(CommandLine.arguments)
 
 let app = NSApplication.shared
 let delegate = AppDelegate()

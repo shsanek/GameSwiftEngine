@@ -2,8 +2,6 @@ import simd
 
 /// It is expirement not use
 public final class MirrorNode: Node, CameraNodeDelegate {
-    public override var typeIdentifier: String { "MirrorNode" }
-
     let camera: CameraNode
 
     private let plane: Node = Node()

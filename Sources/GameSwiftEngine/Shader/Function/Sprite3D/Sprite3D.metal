@@ -135,7 +135,7 @@ sprite3DFragmentShader(
             cordinate.y = -cordinate.y / 2 + 0.5;
             cordinate.x = cordinate.x / 2 + 0.5;
             float posiztionZ = (position.z - 0.001 + lights[i].shadowShiftZ) / position.w;
-            float zLight = float(shadows.sample(linerSampler, cordinate, lights[i].shadowMap));
+            // float zLight = float(shadows.sample(linerSampler, cordinate, lights[i].shadowMap));
             for (int x = -shadowWidth; x <= shadowWidth; x++) {
                 for (int y = -shadowWidth; y <= shadowWidth; y++) {
                     float2 shift = float2(x, y);

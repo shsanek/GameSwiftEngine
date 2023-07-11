@@ -3,8 +3,6 @@ import simd
 /// Node for InterQuakeImporter.Object
 /// Supported bone animation
 public final class Object3DNode: Node {
-    public override var typeIdentifier: String { "Object3DNode" }
-
     /// Current texture
     public var texture: ITexture? {
         didSet {
@@ -19,7 +17,6 @@ public final class Object3DNode: Node {
 
     private var encoder: Sprite3DInput?
     private var object: InterQuakeImporter.Object?
-    private(set) var geometry: Object3DNodeGeometrySource
 
     private var baseFrame: [matrix_float4x4]
     private(set) var bones: [matrix_float4x4] = [] {
@@ -49,12 +46,11 @@ public final class Object3DNode: Node {
     /// - Parameters:
     ///   - object: Geometry
     ///   - texture: texture
-    public init(source: Object3DNodeGeometrySource, texture: ITexture? = nil) {
-        self.geometry = source
+    public init(object: InterQuakeImporter.Object? = nil, texture: ITexture? = nil) {
         self.baseFrame = []
         super.init()
         self.texture = texture
-        self.reload(source)
+        self.reload(object)
     }
 
     /// Set frame (not animation)
@@ -66,17 +62,20 @@ public final class Object3DNode: Node {
         self.fromBones = self.bones
     }
 
-    public func reload(_ source: Object3DNodeGeometrySource) {
-        let object = source.object
+    public func reload(_ object: InterQuakeImporter.Object?) {
         encoder.flatMap { removeRenderInputs($0) }
         self.object = object
-        let encoder = Sprite3DInput(texture: self.texture, vertexs: object?.getVertexs() ?? [])
-        self.baseFrame = object?.getBoneTransform().map { $0.transform.inverse } ?? []
+        guard let object = object else {
+            self.baseFrame = []
+            self.encoder = nil
+            return
+        }
+        let encoder = Sprite3DInput(texture: self.texture, vertexs: object.getVertexs())
+        self.baseFrame = object.getBoneTransform().map { $0.transform.inverse }
         addRenderInput(encoder)
         encoder.texture = self.texture
         self.encoder = encoder
-        self.encoder?.vertexs.values = object?.getVertexs() ?? []
-        self.geometry = source
+        self.encoder?.vertexs.values = object.getVertexs()
     }
 
     func frameTransition(from fromFrame: Int, to toFrame: Int, startProgress: GEFloat = 0) {
@@ -108,5 +107,37 @@ public final class Object3DNode: Node {
             result.append(fromBones[index] * (1 - progress) + toBones[index] * progress)
         }
         bones = result
+    }
+}
+
+import ObjectEditor
+
+extension Object3DNode {
+    var textureResource: Resource {
+        get {
+            .init("")
+        }
+        set {
+            guard let data = try? ResourcesPool.default.getData(newValue) else {
+                return
+            }
+            self.texture = Texture.load(in: data)
+        }
+    }
+
+    var objectResource: Resource {
+        get {
+            .init("")
+        }
+        set {
+            guard
+                let data = try? ResourcesPool.default.getData(newValue),
+                let content = String(data: data, encoding: .utf8)
+            else {
+                self.reload(nil)
+                return
+            }
+            self.reload(InterQuakeImporter.load(content))
+        }
     }
 }
