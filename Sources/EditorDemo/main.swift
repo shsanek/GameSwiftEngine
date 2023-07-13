@@ -26,11 +26,12 @@ app.delegate = delegate
 
 let window = EditorWindow({ NSView() }, delegate: EditorWindow.Delegate(closeHandler: {
     editor.save()
+    editor.close()
     NSApplication.shared.terminate(0)
 }))
 try editor.start({ view in
     window.view = { NSHostingView(rootView: view) }
 })
-window.show(title: "Editor")
+window.show(inFullScreen: true, title: "Editor")
 
 app.run()

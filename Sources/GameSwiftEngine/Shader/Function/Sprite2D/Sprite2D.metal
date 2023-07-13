@@ -21,7 +21,6 @@ struct RasterizerData
     //   interpolate its value with values of other vertices making up the triangle and
     //   pass that interpolated value to the fragment shader for each fragment in that triangle;
     float2 textureCoordinate;
-
 };
 
 // Vertex Function
@@ -46,7 +45,6 @@ sprite2DVertexShader(
     out.clipSpacePosition.w = 1.0;
 
     out.textureCoordinate = textureArray[vertexID];
-
     return out;
 }
 
@@ -63,4 +61,131 @@ sprite2DFragmentShader(
     // Sample the texture and return the color to colorSample
     const half4 colorSample = colorTexture.sample (textureSampler, in.textureCoordinate);
     return float4(colorSample);
+}
+
+struct FragmentShaderOut {
+    float depth [[depth(any)]];
+    half4 color [[color(0)]];
+};
+
+vertex RasterizerData
+gridFullScreenVertexShader(
+                     uint vertexID [[ vertex_id ]],
+                     constant vector_float2 *coordinateArray [[ buffer(0) ]]
+                     )
+
+{
+
+    RasterizerData out;
+
+    out.clipSpacePosition.xy = coordinateArray[vertexID].xy;
+    out.clipSpacePosition.z = 0.0;
+    out.clipSpacePosition.w = 1.0;
+
+    out.textureCoordinate = float2(coordinateArray[vertexID].x, coordinateArray[vertexID].y);
+    return out;
+}
+
+float4 globalPosition(
+                      float2 cord,
+                      constant float4x4 *projectionMatrix,
+                      constant float4x4 *inverseProjectionMatrix,
+                      constant float4x4 *positionMatrix,
+                      constant float4x4 *inversePositionMatrix
+) {
+    float4 zeroDepth = (*projectionMatrix) * float4(0, 0, -5, 1);
+    float4 oneDepth = (*projectionMatrix) * float4(0, 0, -50, 1);
+
+    float4 vec1 = (*positionMatrix) * (*inverseProjectionMatrix) * float4(cord * zeroDepth.w, zeroDepth.z, zeroDepth.w);
+    float4 vec2 = (*positionMatrix) * (*inverseProjectionMatrix) * float4(cord * oneDepth.w, oneDepth.z, oneDepth.w);
+
+    if (abs(vec2.y - vec1.y) < 0.0001) {
+        return float4(0, 0, 0, 0);
+    }
+
+    float t = -vec1.y / (vec2.y - vec1.y);
+    float z = vec1.z + (vec2.z - vec1.z) * t;
+    float x = vec1.x + (vec2.x - vec1.x) * t;
+
+    return float4(x, 0, z, 1);
+}
+
+fragment FragmentShaderOut gridFullScreenFragmentShader(
+                 RasterizerData  in           [[stage_in]],
+                 constant float4x4 *projectionMatrix [[ buffer(0) ]],
+                 constant float4x4 *inverseProjectionMatrix [[ buffer(1) ]],
+                 constant float4x4 *positionMatrix [[ buffer(2) ]],
+                 constant float4x4 *inversePositionMatrix [[ buffer(3) ]],
+                 constant vector_float2 *viewportSizePointer  [[ buffer(4) ]],
+                 constant float *inputScale [[ buffer(5) ]]
+)
+{
+    FragmentShaderOut out;
+
+    //float2(sqrt(0.125), sqrt(0.125))
+    float2 textureShift = float2(2, 2) / (*viewportSizePointer);
+
+    float4 global = globalPosition(in.textureCoordinate.xy, projectionMatrix, inverseProjectionMatrix, positionMatrix, inversePositionMatrix);
+    float4 globalA = globalPosition(in.textureCoordinate.xy + textureShift, projectionMatrix, inverseProjectionMatrix, positionMatrix, inversePositionMatrix);
+    float4 globalB = globalPosition(in.textureCoordinate.xy - textureShift, projectionMatrix, inverseProjectionMatrix, positionMatrix, inversePositionMatrix);
+
+    if (global.w * globalA.w * globalB.w < 0.5) {
+        out.depth = 1;
+        out.color = half4(0.0, 0.0, 0.0, 0.0);
+        return out;
+    }
+
+    float4 pixel = globalA - globalB;
+    float2 pixelSize = float2(pixel.x, pixel.z);
+
+    float4 rev = (*inversePositionMatrix) * global;
+
+    if (rev.z > 0) {
+        out.depth = 1;
+        out.color = half4(0.0, 0, 0, 0.0);
+        return out;
+    }
+
+    rev = (*projectionMatrix) * rev;
+
+    rev.xy = rev.xy / rev.w;
+
+
+    float w = (*projectionMatrix)[3][2];
+    rev.z = (rev.z + w) / rev.w;
+
+    float scale = *inputScale;
+    float n = float(floor(log2(scale)));
+    float currentScale = pow(2.0, n);
+    float nextScale = currentScale * 2.;
+
+    float step1 = 0.5 / currentScale;
+    float step2 = 0.5 / nextScale;
+    float2 position = float2(global.x, global.z);
+    float progress = (scale - currentScale) / (nextScale - currentScale);
+
+    float resultAlpha = 0.;
+
+    float2 delta = position.xy - floor(position.xy / step1) * step1;
+    float2 test = delta / (pixelSize);
+    test = ceil(max(-test * test + 1.0, float2(0.0)));
+    resultAlpha += test.x * (1.0 - progress);
+    resultAlpha += test.y * (1.0 - progress);
+
+    delta = position.xy - floor(position.xy / step2) * step2;
+    test = delta / (pixelSize);
+    test = ceil(max(-test * test + 1.0, float2(0.0)));
+    resultAlpha += test.x * progress;
+    resultAlpha += test.y * progress;
+
+    if (resultAlpha > 0.01) {
+        out.depth = rev.z;
+    } else {
+        out.depth = 1;
+    }
+
+    resultAlpha = resultAlpha * ((1 - rev.z));
+    out.color = half4(resultAlpha, resultAlpha, resultAlpha, resultAlpha);
+
+    return out;
 }

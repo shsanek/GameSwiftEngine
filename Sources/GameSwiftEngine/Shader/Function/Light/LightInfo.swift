@@ -13,6 +13,7 @@ final class LightInfo {
         var shadowProjection: matrix_float4x4 = .init(1)
         var shadowMap: Int32 = -1
         var shadowShiftZ: GEFloat = 0.1
+        var shadowScaleZ: GEFloat = 0.1
     }
 
     struct LightInfoSetting: Hashable {

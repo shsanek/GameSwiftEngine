@@ -19,7 +19,7 @@ public final class MirrorNode: Node, CameraNodeDelegate {
         camera = CameraNode()
         super.init()
         planeInput.material = .mirror
-        camera.projectionMatrix = perspectiveMatrix(aspectRatio: 1)
+        camera.projectionMatrixContainer = .constant(perspectiveMatrix(aspectRatio: 1))
         camera.delegate = self
         self.addSubnode(camera)
         self.plane.addRenderInput(planeInput)

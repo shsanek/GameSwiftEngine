@@ -83,7 +83,8 @@ public final class LoopController {
         camera: CameraNode? = nil,
         descriptor: MTLRenderPassDescriptor,
         drawable: CAMetalDrawable?,
-        size: Size
+        size: Size,
+        ignoreLight: Bool = false
     ) throws {
         let depthDescriptor = MTLDepthStencilDescriptor()
         depthDescriptor.depthCompareFunction = .lessEqual
@@ -123,7 +124,7 @@ public final class LoopController {
             attributes: camera.renderInfo.renderAttributes,
             functionCache: functions,
             projectionMatrix: cameraMatrix,
-            lightInfo: node.lightController.lightInfo
+            lightInfo: ignoreLight ? nil : node.lightController.lightInfo
         )
 
         let viewPort = MTLViewport(

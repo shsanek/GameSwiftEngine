@@ -42,6 +42,7 @@ struct Light {
     float4x4 shadowProjection;
     int shadowMap;
     float shadowShiftZ;
+    float shadowScaleZ;
 };
 
 struct ShadowInfo {
@@ -134,8 +135,8 @@ sprite3DFragmentShader(
             float2 cordinate = position.xy / position.w;
             cordinate.y = -cordinate.y / 2 + 0.5;
             cordinate.x = cordinate.x / 2 + 0.5;
-            float posiztionZ = (position.z - 0.001 + lights[i].shadowShiftZ) / position.w;
-            // float zLight = float(shadows.sample(linerSampler, cordinate, lights[i].shadowMap));
+            /// maby position.z * m[2][2]
+            float posiztionZ = (position.z + lights[i].shadowShiftZ) / position.w;
             for (int x = -shadowWidth; x <= shadowWidth; x++) {
                 for (int y = -shadowWidth; y <= shadowWidth; y++) {
                     float2 shift = float2(x, y);

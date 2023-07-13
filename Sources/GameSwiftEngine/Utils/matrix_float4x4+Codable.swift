@@ -20,7 +20,7 @@ extension matrix_float4x4: Codable {
 }
 
 extension vector_float4 {
-    var xyz: vector_float3 {
+    public var xyz: vector_float3 {
         return .init(x, y, z)
     }
 }

@@ -13,6 +13,7 @@ public final class LightNode: Node, CameraNodeDelegate {
             if isShadow == oldValue {
                 return
             }
+            camera.omIgnore = true
             if isShadow {
                 addSubnode(camera)
                 camera.delegate = self
@@ -110,9 +111,11 @@ public final class LightNode: Node, CameraNodeDelegate {
             return
         }
         camera.renderInfo.renderAttributes.set(.ignoreColorBuffer, value: true)
-        camera.projectionMatrix = perspectiveMatrix(
-            fovyRadians: (angle ?? 0) + (attenuationAngle ?? 0),
-            aspectRatio: 1
+        camera.projectionMatrixContainer = .constant(
+            perspectiveMatrix(
+                fovyRadians: (angle ?? 0) + (attenuationAngle ?? 0),
+                aspectRatio: 1
+            )
         )
         camera.renderInfo.size = .init(
             width: GEFloat(mapInfo.texture.width),
@@ -123,6 +126,7 @@ public final class LightNode: Node, CameraNodeDelegate {
         camera.renderInfo.colorInfo.color = TextureFactory.makeColorTexture(size: .init(width: 512, height: 512))
 
         provider.light.shadowShiftZ = camera.projectionMatrix[3][2]
+        provider.light.shadowScaleZ = camera.projectionMatrix[2][2]
         provider.light.shadowMap = Int32(mapInfo.index)
     }
 
@@ -155,4 +159,17 @@ public final class LightNode: Node, CameraNodeDelegate {
         let direction = matrix_multiply(transform, vector_float4(0, 0, -1, 1)) - dVectore
         provider.light.direction = .init(x: direction.x, y: direction.y, z: direction.z)
     }
+}
+
+import ObjectEditor
+import SwiftUI
+
+@EditorModification<LightNode>
+struct NodeLightModification: IEditorModification {
+    @Editable var isShadow: Bool = false
+    @Editable var color: vector_float3 = .init(x: 1, y: 1, z: 1)
+    @Editable var angle: GEFloat? = 1
+    @Editable var power: GEFloat = 1
+    @Editable var attenuationAngle: GEFloat? = 0
+    @Editable var shadowSkipFrame: Int = 0
 }

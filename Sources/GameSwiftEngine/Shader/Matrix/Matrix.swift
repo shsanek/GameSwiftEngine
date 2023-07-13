@@ -80,3 +80,31 @@ func absalutePositionColisionInPlane(
     result = matrix_multiply(planeTransform, result)
     return result
 }
+
+//matrix_float4x4(
+//    columns: (
+//        vector_float4(xScale, 0, 0, 0),
+//        vector_float4(0, yScale, 0, 0),
+//        vector_float4(0, 0, zScale, -1),
+//        vector_float4(0, 0, zScale * nearZ, 0)
+//    )
+//)
+//
+//matrix_float4x4(
+//    rows: ( 1
+//            vector_float4(xScale, 0, 0, 0),
+//            vector_float4(0, yScale, 0, 0),
+//            vector_float4(0, 0, zScale, -1),
+//            vector_float4(0, 0, zScale * nearZ, 0)
+//    )
+//)
+//
+//float posiztionZ = (position.z + lights[i].shadowShiftZ) / position.w;
+//
+//
+//out.x   = (in.x * xScale) / (in.z * -1);
+//out.z   = (in.z * zScale + zScale * nearZ) / (in.z * -1);
+//out.w   = in.z * -1 ;
+//
+//
+//

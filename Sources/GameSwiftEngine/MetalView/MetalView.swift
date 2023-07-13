@@ -95,4 +95,61 @@ public class MetalView: MTKView, MTKViewDelegate {
         }
     }
 }
+
 #endif
+
+//import ObjectEditor
+//
+//public protocol IEvent {
+//    var identifier: String { get }
+//}
+//
+//public struct Event<ValueType>: IEvent {
+//    public let identifier: String
+//    public let info: ValueType
+//}
+//
+//public struct EventType<ValueType> {
+//    public let identifier: String
+//
+//    public func event(_ info: ValueType) -> Event<ValueType> {
+//        .init(identifier: identifier, info: info)
+//    }
+//}
+//
+//public final class EventHandler {
+//    let block: (IEvent) throws -> Void
+//
+//    init(_ block: @escaping (IEvent) throws -> Void) {
+//        self.block = block
+//    }
+//}
+//
+//public final class EventHandlersContainer {
+//    weak var eventSystem: EventSystem?
+//
+//    var handlers: [String: ValueContainer<[EventHandler]>] = [:]
+//
+//    public func addHandler<VT>(_ eventType: EventType<VT>, handler: @escaping (Event<VT>) -> Void) {
+//        let handler: (IEvent) throws -> Void = { event in
+//            guard let event = event as? Event<VT> else {
+//                throw RenderError.message("incorrect type")
+//            }
+//            handler(event)
+//        }
+//
+//        handlers[eventType.identifier] = handlers[eventType.identifier] ?? .init(value: [])
+//        handlers[eventType.identifier]?.value.append(EventHandler(handler))
+//
+//
+//    }
+//}
+//
+//public final class EventSystem {
+//    private(set) var loopHandler: ValueContainer<[EventHandler]> = .init(value: [])
+//    private(set) lazy var handlers: [String: ValueContainer<[EventHandler]>] = ["loop": loopHandler]
+//
+//    public func addHandler<VT>(_ identifier: String, handler: EventHandler) {
+//        handlers[identifier]
+//    }
+//}
