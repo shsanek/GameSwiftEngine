@@ -11,6 +11,7 @@ extension OMContext {
         let context = OMContext.swiftGameEngineContext
         do {
             try context.registerObjects([
+                .make(name: "Zoombe", { ZombeeNode.init() }),
             ])
             try context.registerModifications([
             ])

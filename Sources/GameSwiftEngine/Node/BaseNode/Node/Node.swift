@@ -96,7 +96,7 @@ open class Node {
     }
 
     /// Result transform taking into account the transformations of the parents
-    /// `modelMatrix = lastMatrix * positionMatrix * rotateMatrix * scaleMatrix * firstMatrix`
+    /// `absoluteTransform = parent.absoluteTransform * modelMatrix`
     public var absoluteTransform: matrix_float4x4 {
         if let absoluteTransformStorage = absoluteTransformStorage {
             return absoluteTransformStorage
@@ -220,8 +220,14 @@ extension Node {
     /// Global position in hierarchy
     ///  `position = absoluteTransform * .zero`
     public var position: vector_float3 {
-        let position = matrix_multiply(absoluteTransform, .init(0, 0, 0, 1))
-        return .init(x: position.x, y: position.y, z: position.z)
+        get {
+            let position = matrix_multiply(absoluteTransform, .init(0, 0, 0, 1))
+            return .init(x: position.x, y: position.y, z: position.z)
+        }
+        set {
+            let transform = (parent?.absoluteTransform ?? .init(1)).inverse * newValue.to4
+            move(to: transform.xyz)
+        }
     }
 
     /// Global position in node
@@ -288,8 +294,19 @@ extension Node {
 }
 
 extension Node {
-    /// Local scale
+    /// Scale
     public var scale: vector_float3 {
+        get {
+            let x = (absoluteTransform * vector_float4(x: 1, y: 0, z: 0, w: 1)) - position.to4
+            let y = (absoluteTransform * vector_float4(x: 0, y: 1, z: 0, w: 1)) - position.to4
+            let z = (absoluteTransform * vector_float4(x: 0, y: 0, z: 1, w: 1)) - position.to4
+
+            return vector_float3(length(x), length(y), length(z))
+        }
+    }
+
+    /// Local scale
+    public var localScale: vector_float3 {
         get {
             .init(
                 x: scaleMatrix[0][0],

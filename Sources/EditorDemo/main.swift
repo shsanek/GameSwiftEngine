@@ -21,7 +21,10 @@ let editor = MACEditorProjectManager(
 
 
 let app = NSApplication.shared
-let delegate = AppDelegate(context: .demoContext)
+let delegate = AppDelegate {
+    editor.save()
+    editor.close()
+}
 app.delegate = delegate
 
 let window = EditorWindow({ NSView() }, delegate: EditorWindow.Delegate(closeHandler: {

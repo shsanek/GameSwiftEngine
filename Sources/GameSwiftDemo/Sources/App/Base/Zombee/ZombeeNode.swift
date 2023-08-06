@@ -26,10 +26,10 @@ final class ZombeeNode: Node {
         node.move(to: .init(0, -0.5, 0))
         node.rotate(on: -.pi/2, axis: .init(1, 0, 0))
 
-        let light = LightNode()
-        light.color = .init(0, 1, 0)
-        light.power = 0.005
-        addSubnode(light)
+//        let light = LightNode()
+//        light.color = .init(0, 1, 0)
+//        light.power = 0.005
+//        addSubnode(light)
 
         rotate(on: .pi, axis: .init(0, 1, 0))
 

@@ -24,5 +24,5 @@ public struct NodeBaseModification: IEditorModification {
 
     @Editable(name: "position") public var localPosition: vector_float3 = .init(x: 0, y: 0, z: 0)
     @Editable(mapper: RotateMap.self, name: "rotate") public var localRotate: vector_float3 = .init(x: 0, y: 0, z: 0)
-    @Editable public var scale: vector_float3 = .init(x: 1, y: 1, z: 1)
+    @Editable(name: "scale") public var localScale: vector_float3 = .init(x: 1, y: 1, z: 1)
 }

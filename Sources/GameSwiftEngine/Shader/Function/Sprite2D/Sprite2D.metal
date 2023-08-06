@@ -86,12 +86,11 @@ gridFullScreenVertexShader(
     return out;
 }
 
-float4 globalPosition(
+float4 globalInPlanePosition(
                       float2 cord,
                       constant float4x4 *projectionMatrix,
                       constant float4x4 *inverseProjectionMatrix,
-                      constant float4x4 *positionMatrix,
-                      constant float4x4 *inversePositionMatrix
+                      constant float4x4 *positionMatrix
 ) {
     float4 zeroDepth = (*projectionMatrix) * float4(0, 0, -5, 1);
     float4 oneDepth = (*projectionMatrix) * float4(0, 0, -50, 1);
@@ -122,12 +121,12 @@ fragment FragmentShaderOut gridFullScreenFragmentShader(
 {
     FragmentShaderOut out;
 
-    //float2(sqrt(0.125), sqrt(0.125))
     float2 textureShift = float2(2, 2) / (*viewportSizePointer);
 
-    float4 global = globalPosition(in.textureCoordinate.xy, projectionMatrix, inverseProjectionMatrix, positionMatrix, inversePositionMatrix);
-    float4 globalA = globalPosition(in.textureCoordinate.xy + textureShift, projectionMatrix, inverseProjectionMatrix, positionMatrix, inversePositionMatrix);
-    float4 globalB = globalPosition(in.textureCoordinate.xy - textureShift, projectionMatrix, inverseProjectionMatrix, positionMatrix, inversePositionMatrix);
+
+    float4 global = globalInPlanePosition(in.textureCoordinate.xy, projectionMatrix, inverseProjectionMatrix, positionMatrix);
+    float4 globalA = globalInPlanePosition(in.textureCoordinate.xy + textureShift, projectionMatrix, inverseProjectionMatrix, positionMatrix);
+    float4 globalB = globalInPlanePosition(in.textureCoordinate.xy - textureShift, projectionMatrix, inverseProjectionMatrix, positionMatrix);
 
     if (global.w * globalA.w * globalB.w < 0.5) {
         out.depth = 1;
@@ -135,7 +134,7 @@ fragment FragmentShaderOut gridFullScreenFragmentShader(
         return out;
     }
 
-    float4 pixel = globalA - globalB;
+    float4 pixel = abs(globalA - globalB);
     float2 pixelSize = float2(pixel.x, pixel.z);
 
     float4 rev = (*inversePositionMatrix) * global;
@@ -166,11 +165,26 @@ fragment FragmentShaderOut gridFullScreenFragmentShader(
 
     float resultAlpha = 0.;
 
-    float2 delta = position.xy - floor(position.xy / step1) * step1;
+    float2 line = floor(position.xy / step1) * step1;
+
+    float2 delta = position.xy - line;
     float2 test = delta / (pixelSize);
     test = ceil(max(-test * test + 1.0, float2(0.0)));
     resultAlpha += test.x * (1.0 - progress);
     resultAlpha += test.y * (1.0 - progress);
+
+    if (line.x == 0 && test.x > 0.01) {
+        resultAlpha = ((1 - rev.z));
+        out.depth = rev.z;
+        out.color = half4(0, resultAlpha, 0, resultAlpha);
+        return out;
+    }
+    if (line.y == 0 && test.y > 0.01) {
+        resultAlpha = ((1 - rev.z));
+        out.depth = rev.z;
+        out.color = half4(resultAlpha, 0, 0, resultAlpha);
+        return out;
+    }
 
     delta = position.xy - floor(position.xy / step2) * step2;
     test = delta / (pixelSize);
@@ -184,7 +198,7 @@ fragment FragmentShaderOut gridFullScreenFragmentShader(
         out.depth = 1;
     }
 
-    resultAlpha = resultAlpha * ((1 - rev.z));
+    resultAlpha = resultAlpha * ((1 - rev.z) * (1 - rev.z));
     out.color = half4(resultAlpha, resultAlpha, resultAlpha, resultAlpha);
 
     return out;

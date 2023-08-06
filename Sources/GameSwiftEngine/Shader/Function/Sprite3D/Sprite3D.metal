@@ -172,6 +172,33 @@ sprite3DMirrorFragmentShader(
     return colorSample;
 }
 
+struct FragmentShaderOut {
+    float depth [[depth(any)]];
+    half4 color [[color(0)]];
+};
+
+fragment FragmentShaderOut
+simpleGizmoTextureFragmentShader(
+                       RasterizerData  in           [[stage_in]],
+                       texture2d<half> texture [[ texture(0) ]]
+                       )
+{
+    constexpr sampler nearestSampler (mag_filter::nearest, min_filter::nearest);
+
+    float4 colorSample = float4(texture.sample (nearestSampler, in.textureCoordinate));
+
+    FragmentShaderOut out;
+    out.depth = 0;
+    out.color = half4(colorSample);
+
+    if (colorSample.w < 0.01) {
+        out.depth = 1;
+        out.color = half4(0, 0, 0, 0);
+    }
+
+    return out;
+}
+
 fragment float4 sprite3DEmptyFragmentShader(RasterizerData in [[stage_in]] ){
     return float4( 0, 0, 0, 0);
 }

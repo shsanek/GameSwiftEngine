@@ -1,6 +1,8 @@
 import simd
+import ObjectEditor
 
 extension InterQuakeImporter.Object {
+
     public func getIndexs() -> [UInt32] {
         poligons.flatMap { [UInt32($0.a), UInt32($0.b), UInt32($0.c)] }
     }

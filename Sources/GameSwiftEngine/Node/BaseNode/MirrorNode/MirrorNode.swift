@@ -57,6 +57,24 @@ public final class MirrorNode: Node, CameraNodeDelegate {
     }
 }
 
+public final class Plane: Node, ITexturable {
+    public var texture: ITexture? {
+        didSet {
+            self.planeInput.texture = texture
+        }
+    }
+    public var planeInput: Sprite3DInput = {
+        let input = Sprite3DInput(texture: nil, vertexs: GeometryContainer.plane.vertexes)
+        input.vertexIndexs.values = GeometryContainer.plane.indexes
+        return input
+    }()
+
+    public override init() {
+        super.init()
+        addRenderInput(planeInput)
+    }
+}
+
 extension GeometryContainer {
     static let plane: GeometryContainer = {
         let x: GEFloat = 0.5

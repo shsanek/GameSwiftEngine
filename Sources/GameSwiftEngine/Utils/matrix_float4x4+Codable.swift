@@ -26,7 +26,7 @@ extension vector_float4 {
 }
 
 extension vector_float3 {
-    var to4: vector_float4 {
+    public var to4: vector_float4 {
         return .init(x, y, z, 1)
     }
 }

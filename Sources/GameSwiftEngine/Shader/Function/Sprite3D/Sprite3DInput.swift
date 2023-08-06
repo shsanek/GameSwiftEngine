@@ -11,6 +11,7 @@ extension RenderAttributesKey {
 public enum Material: UInt32 {
     case `default` = 0
     case mirror = 1
+    case gizmo
 }
 
 public struct InputBoneBind: Hashable, Codable {
@@ -50,13 +51,13 @@ public final class Sprite3DInput: ProjectionChangable, PositionChangable, LightI
     var projectionMatrix: matrix_float4x4
     var positionMatrix: matrix_float4x4 = .init(1)
     var lightInfo: LightInfo?
-    var material: Material = .default
+    public var material: Material = .default
 
     public var texture: ITexture?
     public let bones = OptionalBufferContainer<matrix_float4x4>(.init(1))
 
     public let vertexIndexs = OptionalBufferContainer<UInt32>(0)
-    public let vertexs = BufferContainer<VertexInput>()
+    public var vertexs = BufferContainer<VertexInput>()
 
     public init(
         texture: ITexture?,
@@ -65,6 +66,16 @@ public final class Sprite3DInput: ProjectionChangable, PositionChangable, LightI
     ) {
         self.projectionMatrix = projectionMatrix
         self.vertexs.values = vertexs
+        self.texture = texture
+    }
+
+    public init(
+        texture: ITexture?,
+        projectionMatrix: matrix_float4x4 = .init(1),
+        vertexs: BufferContainer<VertexInput>
+    ) {
+        self.projectionMatrix = projectionMatrix
+        self.vertexs = vertexs
         self.texture = texture
     }
 
@@ -95,6 +106,10 @@ extension Sprite3DInput: MetalRenderHandler {
         fragmentFunction: "sprite3DMirrorFragmentShader"
     )
 
+    private static let gizmoFuntion = MetalRenderFunctionName(
+        vertexFunction: "sprite3DVertexShader",
+        fragmentFunction: "simpleGizmoTextureFragmentShader"
+    )
 
     static var dependencyFunctions: [MetalRenderFunctionName] {
         [mainFuntion, emptyFuntion, mirrorFuntion]
@@ -119,6 +134,10 @@ extension Sprite3DInput: MetalRenderHandler {
             case .mirror:
                 try functionsСache
                     .get(with: Self.mirrorFuntion, device: device)
+                    .start(encoder: encoder)
+            case .gizmo:
+                try functionsСache
+                    .get(with: Self.gizmoFuntion, device: device)
                     .start(encoder: encoder)
             }
 
@@ -148,7 +167,7 @@ extension Sprite3DInput: MetalRenderHandler {
 
         encoder.setFragmentTexture(texture, index: 0)
 
-        guard material != .mirror else {
+        guard material != .mirror && material != .gizmo else {
             return
         }
         var count: Int32 = Int32(light?.1 ?? 0)
@@ -496,7 +515,7 @@ extension Objects3DArray: MetalRenderHandler {
                 try functionsСache
                     .get(with: Self.mainFuntion, device: device)
                     .start(encoder: encoder)
-            case .mirror:
+            case .mirror, .gizmo:
                 try functionsСache
                     .get(with: Self.mirrorFuntion, device: device)
                     .start(encoder: encoder)

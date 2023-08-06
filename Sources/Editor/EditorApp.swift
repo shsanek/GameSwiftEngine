@@ -7,10 +7,10 @@ import simd
 
 @available(macOS 10.15, *)
 public class AppDelegate: NSObject, NSApplicationDelegate {
-    let context: OMContext
+    let willResignActive: () -> Void
 
-    public init(context: OMContext) {
-        self.context = context
+    public init(willResignActive: @escaping () -> Void) {
+        self.willResignActive = willResignActive
     }
 
     public func applicationDidFinishLaunching(_ notification: Notification) {
@@ -22,6 +22,10 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
 
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    public func applicationWillResignActive(_ notification: Notification) {
+        willResignActive()
     }
 }
 
@@ -44,8 +48,7 @@ public final class EditorProjectManagerDelegate: IEditorProjectManagerDelegate {
             throw EditorError.message("node is not NSView")
         }
         let editorScene = SceneNode()
-        let controll = CameraControl(node: editorScene)
-        try? context.addAllModification(controll.controll)
+        let controll = EditorControl(editorScene: editorScene, context: context)
         editorScene.addSubnode(node)
         let view = MetalView()
         view.controller?.node = editorScene
@@ -60,21 +63,26 @@ public final class EditorProjectManagerDelegate: IEditorProjectManagerDelegate {
                         VStack {
                             HStack {
                                 Spacer()
-                                CameraSettingView(controll: controll.controll)
+                                CameraSettingView(node: controll.containerNode)
                             }
                             Spacer()
                         }
-                    }.gesture(controll.dragGesture).gesture(controll.scaleGesture)
+                    }
+                    .gesture(controll.dragGesture)
+                    .gesture(controll.scaleGesture)
                 }
             ),
-            aspect: self.splitVM?.aspect ?? 0.7
+            aspect: self.splitVM?.aspect ?? 0.8
         )
         splitVM.contentB = { [context] in
             AnyView(
                 EditorView(
                     context: context,
                     node: node,
-                    selectHandler: selectedNode,
+                    selectHandler: {
+                        controll.selectedNode = ($0 as? Node)
+                        selectedNode($0)
+                    },
                     actionHandler: actionHandler
                 )
             )
@@ -95,8 +103,8 @@ struct CameraSettingView: View {
     @State var isOpen: Bool = false
     private let node: Node
 
-    init(controll: Node) {
-        self.node = controll
+    init(node: Node) {
+        self.node = node
     }
 
     var body: some View {
@@ -114,7 +122,7 @@ struct CameraSettingView: View {
             }
             if isOpen {
                 ScrollView {
-                    ObjectEditorView(node: node)
+                    EditorObjectView(node: node, isIdentifierShow: false)
                 }
                 .scrollIndicators(.hidden)
                 .frame(height: 200)
@@ -141,14 +149,125 @@ extension IOMNode {
     }
 }
 
-struct CameraControl {
-    let node: SceneNode
+final class EditorNode: Node {
+    let arrowNode: Node = Node()
 
-    let controll: Node = Node()
-    let camera = EditorCameraNode()
+    override init() {
+        super.init()
+        self.omIgnore = true
+        loadArrow()
+    }
 
-    let lastLocation: ValueContainer<CGPoint?> = .init(value: nil)
-    let statFullPosition: ValueContainer<CGPoint> = .init(value: .zero)
+    private func loadArrow() {
+        guard let container = try? ObjectImporterLoader.load(.init("/Resources/Objects/arrow.obj")) else {
+            return
+        }
+        let texture = try? TextureLoader.load(.init("/Resources/Textures/256pallet.png"))
+        let xInput = Sprite3DInput(texture: texture, vertexs: container.vertexs.values.map({
+            .init(position: $0.position, uv: .init(x: 0.5 / 16.0, y: 0.5 / 16.0))
+        }))
+        xInput.material = .gizmo
+        arrowNode.addRenderInput(xInput)
+
+        let yInput = Sprite3DInput(texture: texture, vertexs: container.vertexs.values.map({
+            .init(
+                position: (rotationMatrix4x4(
+                    radians: Float.pi / 2,
+                    axis: .init(x: 0, y: 0, z: 1)
+                ) * $0.position.to4).xyz,
+                uv: .init(x: 0.5 / 16.0, y: 1.5 / 16.0)
+            )
+        }))
+        yInput.material = .gizmo
+        arrowNode.addRenderInput(yInput)
+
+        let zInput = Sprite3DInput(texture: texture, vertexs: container.vertexs.values.map({
+            .init(
+                position: (rotationMatrix4x4(
+                    radians: Float.pi / 2,
+                    axis: .init(x: 0, y: 1, z: 0)
+                ) * $0.position.to4).xyz,
+                uv: .init(x: 1.5 / 16.0, y: 0.5 / 16.0)
+            )
+        }))
+        zInput.material = .gizmo
+        arrowNode.addRenderInput(zInput)
+
+        addSubnode(arrowNode)
+    }
+
+    override func loop(_ time: Double, size: Size) throws {
+        try super.loop(time, size: size)
+        self.lastMatrix = self.parent?.absoluteTransform.inverse ?? .init(1)
+        let parent = self.parent?.position ?? .zero
+        let camera = scene?.mainCamera.position ?? .zero
+        let pos = camera + normalize(parent - camera) * 10
+        self.localPosition = pos
+    }
+}
+
+final class EditorControl {
+    let editorScene: SceneNode
+
+    let containerNode: Node = Node()
+    let cameraNode = EditorCameraNode()
+
+    private var lastLocation: CGPoint? = nil
+    private var startZoom: CGFloat? = nil
+    private let speed: GEFloat = 1
+    private var retains = [Any?]()
+    private let context: OMContext
+
+    var selectedNode: Node? = nil {
+        didSet {
+            willDeselect(oldValue)
+            if let node = selectedNode {
+                didSelect(node)
+            }
+        }
+    }
+
+    private let editor = EditorNode()
+
+    init(editorScene: SceneNode, context: OMContext) {
+        self.editorScene = editorScene
+        self.context = context
+        install()
+    }
+
+    private func didSelect(_ node: Node) {
+        node.addSubnode(editor)
+    }
+
+    private func willDeselect(_ node: Node?) {
+        editor.removeFromParent()
+    }
+
+    private func install() {
+        editorScene.mainCamera.removeFromParent()
+        editorScene.mainCamera = cameraNode
+        editorScene.addSubnode(containerNode)
+        containerNode.addSubnode(cameraNode)
+        editorScene.mainCamera.localPosition = .init(x: 0, y: 0, z: 1)
+        try? context.addAllModification(containerNode)
+
+        containerNode.updateModification(NodeBaseModification.self) { mod in
+            mod.localRotate.y -= GEFloat(35)
+            mod.localRotate.x -= GEFloat(30)
+        }
+        updateZoom(zoom: 1.0 / 30.0)
+        startZoom = nil
+    }
+
+    var body: some View {
+        ZStack {
+//            Button(action: {
+//                controll.move(on: .init(x: 0, y: 0, z: -1) * speed)
+//            }, label: {
+//                Text("w")
+//            }).keyboardShortcut("w", modifiers: [])
+        }.opacity(0).frame(width: 0, height: 0).position(x: -10000, y: -10000)
+    }
 
     var dragGesture: some Gesture {
         DragGesture().onChanged { value in
@@ -157,79 +276,35 @@ struct CameraControl {
             currentLocation.x = value.location.x
             currentLocation.y = value.location.y
 
-            let lastLocation = lastLocation.value ?? value.startLocation
-            self.lastLocation.value = currentLocation
+            let lastLocation = self.lastLocation ?? value.startLocation
+            self.lastLocation = currentLocation
 
-            statFullPosition.value.x -= (currentLocation.x - lastLocation.x) * speed
-            statFullPosition.value.y -= (currentLocation.y - lastLocation.y) * speed
-
-            controll.updateModification(NodeBaseModification.self) { mod in
-                mod.localRotate.y = GEFloat(statFullPosition.value.x)
-                mod.localRotate.x = GEFloat(statFullPosition.value.y)
+            self.containerNode.updateModification(NodeBaseModification.self) { mod in
+                mod.localRotate.y -= GEFloat((currentLocation.x - lastLocation.x) * speed)
+                mod.localRotate.x -= GEFloat((currentLocation.y - lastLocation.y) * speed)
             }
         }.onEnded { _ in
-            lastLocation.value = nil
+            self.lastLocation = nil
         }
     }
-
-    private let totalZoom: ValueContainer<CGFloat> = .init(value: 10)
 
     var scaleGesture: some Gesture {
         MagnifyGesture()
             .onChanged { value in
-                updateZoom(zoom: value.magnification)
+                self.updateZoom(zoom: value.magnification)
             }
             .onEnded { value in
-                totalZoom.value /= value.magnification
+                self.startZoom = nil
             }
     }
 
     func updateZoom(zoom: CGFloat) {
-        let s = max(GEFloat(totalZoom.value / zoom), 1)
-        print("s: \(s), z: \(zoom)")
-        controll.scale(to: .init(x: s, y: s, z: s))
-        camera.gridScale = s
+        let startZoom = self.startZoom ?? CGFloat(containerNode.localScale.x)
+        self.startZoom = startZoom
+        let s = max(GEFloat(startZoom / zoom), 1)
+        containerNode.updateModification(NodeBaseModification.self) { mod in
+            mod.localScale = .init(x: s, y: s, z: s)
+        }
+        cameraNode.gridScale = s
     }
-
-    let speed: GEFloat = 1
-
-    init(node: SceneNode) {
-        self.node = node
-        install()
-    }
-
-    func install() {
-        node.mainCamera.removeFromParent()
-        node.mainCamera = camera
-        node.addSubnode(controll)
-        controll.addSubnode(camera)
-        node.mainCamera.localPosition = .init(x: 0, y: 0, z: 1)
-        updateZoom(zoom: 1)
-    }
-
-    var body: some View {
-        ZStack {
-            Button(action: {
-                controll.move(on: .init(x: 0, y: 0, z: -1) * speed)
-            }, label: {
-                Text("w")
-            }).keyboardShortcut("w", modifiers: [])
-            Button(action: {
-                controll.move(on: .init(x: 0, y: 0, z: 1) * speed)
-            }, label: {
-                Text("s")
-            }).keyboardShortcut("s", modifiers: [])
-            Button(action: {
-                controll.move(on: .init(x: 1, y: 0, z: 0) * speed)
-            }, label: {
-                Text("d")
-            }).keyboardShortcut("d", modifiers: [])
-            Button(action: {
-                controll.move(on: .init(x: -1, y: 0, z: 0) * speed)
-            }, label: {
-                Text("a")
-            }).keyboardShortcut("a", modifiers: [])
-        }.opacity(0).frame(width: 0, height: 0).position(x: -10000, y: -10000)
-    }
-
 }

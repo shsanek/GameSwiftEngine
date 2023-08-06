@@ -2,7 +2,7 @@ import simd
 
 /// Node for InterQuakeImporter.Object
 /// Supported bone animation
-public final class Object3DNode: Node {
+public final class Object3DNode: Node, ITexturable {
     /// Current texture
     public var texture: ITexture? {
         didSet {
@@ -75,7 +75,21 @@ public final class Object3DNode: Node {
         addRenderInput(encoder)
         encoder.texture = self.texture
         self.encoder = encoder
-        self.encoder?.vertexs.values = object.getVertexs()
+    }
+
+    public func reload(_ container: LazyInterQuakeImporterContainer?) {
+        encoder.flatMap { removeRenderInputs($0) }
+        self.object = container?.object
+        guard let object = object, let container = container else {
+            self.baseFrame = []
+            self.encoder = nil
+            return
+        }
+        let encoder = Sprite3DInput(texture: self.texture, vertexs: container.vertexs)
+        self.baseFrame = object.getBoneTransform().map { $0.transform.inverse }
+        addRenderInput(encoder)
+        encoder.texture = self.texture
+        self.encoder = encoder
     }
 
     func frameTransition(from fromFrame: Int, to toFrame: Int, startProgress: GEFloat = 0) {
@@ -107,37 +121,5 @@ public final class Object3DNode: Node {
             result.append(fromBones[index] * (1 - progress) + toBones[index] * progress)
         }
         bones = result
-    }
-}
-
-import ObjectEditor
-
-extension Object3DNode {
-    var textureResource: Resource {
-        get {
-            .init("")
-        }
-        set {
-            guard let data = try? ResourcesPool.default.getData(newValue) else {
-                return
-            }
-            self.texture = Texture.load(in: data)
-        }
-    }
-
-    var objectResource: Resource {
-        get {
-            .init("")
-        }
-        set {
-            guard
-                let data = try? ResourcesPool.default.getData(newValue),
-                let content = String(data: data, encoding: .utf8)
-            else {
-                self.reload(nil)
-                return
-            }
-            self.reload(InterQuakeImporter.load(content))
-        }
     }
 }
