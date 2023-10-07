@@ -2,9 +2,9 @@
 
 Simple engine for 3d
 
-Features: Collision, dynamic shadow, bones animation.
+Features: Collision, dynamic shadow map, bones animation.
 
-Models format:  `OBJ`, `IQE`
+Models format:  `OBJ`, [`IQE`](http://sauerbraten.org/iqm/iqe.txt)
 
 ## Demo
 
@@ -29,7 +29,7 @@ Added SMP
 
 ```
     .package(url: "https://github.com/shsanek/GameSwiftEngine.git", branch: "main")
-``` 
+```
 
 Added import
 
@@ -97,10 +97,11 @@ animation.duration = 1
 controller = container.addAnimation(animation)
 ```
 
-### Matrix 
+### Matrix
 
 For simplicity, there are several functions
 
 - `perspectiveMatrix`
 - `translationMatrix4x4`
 - `rotationMatrix4x4`
+
