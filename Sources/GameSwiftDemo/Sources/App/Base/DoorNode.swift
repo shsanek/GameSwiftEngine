@@ -55,11 +55,12 @@ class DoorNode: Node, INodeActive {
     override func loop(_ time: Double, size: Size) throws {
         try super.loop(time, size: size)
         voxelElementController.lockNeedUpdate {
-            let speed: Double = 1
-            if localPosition.x < 1 && state == .open {
+            let time = Float(time)
+            let speed: Float = localScale.x
+            if localPosition.x < speed && state == .open {
                 move(on: .init(x: GEFloat(speed * time), y: 0, z: 0))
             }
-            if state == .open && localPosition.x > 1 {
+            if state == .open && localPosition.x > speed {
                 move(to: .init(x: 1, y: 0, z: 0))
             }
             if localPosition.x > 0 && state == .close {
@@ -74,4 +75,24 @@ class DoorNode: Node, INodeActive {
     func action() {
         state = (state == .close ? .open : .close)
     }
+}
+
+import SwiftUI
+import ObjectEditor
+
+extension DoorNode {
+    var isOpen: Bool {
+        get {
+            state == .open
+        }
+        set {
+            state = newValue ? .open : .close
+        }
+    }
+}
+
+
+@EditorModification<DoorNode>
+struct DoorNodeModification: IEditorModification {
+    @Editable public var isOpen: Bool = false
 }

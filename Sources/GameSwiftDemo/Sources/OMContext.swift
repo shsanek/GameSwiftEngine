@@ -11,9 +11,11 @@ extension OMContext {
         let context = OMContext.swiftGameEngineContext
         do {
             try context.registerObjects([
-                .make(name: "Zoombe", { ZombeeNode.init() }),
+                .make(name: "Zoombe", { ZombeeNode() }),
+                .make(name: "Door", { DoorNode() })
             ])
             try context.registerModifications([
+                .make({ DoorNodeModification() })
             ])
         }
         catch {

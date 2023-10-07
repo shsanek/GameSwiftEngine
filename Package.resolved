@@ -6,7 +6,7 @@
       "location" : "https://github.com/shsanek/ObjectEditor.git",
       "state" : {
         "branch" : "master",
-        "revision" : "83061947d3f4954790cadf9de5b8472ebea976df"
+        "revision" : "e0038a4bd23218641f2a30b446b6d8fc7d442811"
       }
     },
     {
@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-syntax.git",
       "state" : {
-        "revision" : "67c5007099d9ffdd292f421f81f4efe5ee42963e",
-        "version" : "509.0.0-swift-DEVELOPMENT-SNAPSHOT-2023-07-09-a"
+        "revision" : "74203046135342e4a4a627476dd6caf8b28fe11b",
+        "version" : "509.0.0"
       }
     }
   ],

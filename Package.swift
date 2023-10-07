@@ -14,6 +14,7 @@ let package = Package(
         .executable(name: "DemoApp", targets: ["DemoApp"])
     ],
     dependencies: [
+        // .package(path: "../ObjectEditor")
         .package(url: "https://github.com/shsanek/ObjectEditor.git", branch: "master")
     ],
     targets: [

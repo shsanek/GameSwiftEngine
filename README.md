@@ -14,7 +14,6 @@ Models format:  `OBJ`, `IQE`
 ## Demo
 Unfortunately you will have to use your resources to run the demo
 
-
 ## Fast instruction
 
 Added SMP
