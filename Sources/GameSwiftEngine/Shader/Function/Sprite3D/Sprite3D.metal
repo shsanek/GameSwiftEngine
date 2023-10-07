@@ -42,6 +42,13 @@ struct Light {
     float4x4 shadowProjection;
     int shadowMap;
     float shadowShiftZ;
+    float shadowScaleZ;
+};
+
+struct ShadowInfo {
+    float shadowMapSize;
+    int shadowSoftWidth;
+    float shadowSoftSize;
 };
 
 vertex RasterizerData
@@ -83,14 +90,20 @@ sprite3DFragmentShader(
                        texture2d<half> colorTexture [[ texture(0) ]],
                        depth2d_array<float, access::sample> shadows [[ texture(1) ]],
                        constant Light *lights [[ buffer(0) ]],
-                       constant int *numberOfLights [[ buffer(1) ]]
+                       constant int *numberOfLights [[ buffer(1) ]],
+                       constant ShadowInfo *shadowInfo [[ buffer(2) ]]
                        )
 {
+    const int shadowWidth = (*shadowInfo).shadowSoftWidth;
+    const float shadowSize = (*shadowInfo).shadowSoftSize;
+    const float shadowMapSize = (*shadowInfo).shadowMapSize;
+
     constexpr sampler linerSampler (mag_filter::linear,
                                     min_filter::linear);
     constexpr sampler nearestSampler (mag_filter::nearest,
                                       min_filter::nearest);
     float4 colorSample = float4(colorTexture.sample (nearestSampler, in.textureCoordinate));
+
 
     // Light
     float4 light = float4(0, 0, 0, 1);
@@ -117,16 +130,24 @@ sprite3DFragmentShader(
             lng = ceil(power / ceilStep) * power;
         }
         if (lights[i].shadowMap > -1 && power > 0.001) {
+            float shadowTotal = 0;
             float4 position = lights[i].shadowProjection * float4(in.realPosition, 1);
             float2 cordinate = position.xy / position.w;
-
             cordinate.y = -cordinate.y / 2 + 0.5;
             cordinate.x = cordinate.x / 2 + 0.5;
-
-            float zLight = float(shadows.sample(linerSampler, cordinate, lights[i].shadowMap)) * position.w;
-            if (position.z - 0.001 > zLight - lights[i].shadowShiftZ) {
-                power = 0;
+            /// maby position.z * m[2][2]
+            float posiztionZ = (position.z + lights[i].shadowShiftZ) / position.w;
+            for (int x = -shadowWidth; x <= shadowWidth; x++) {
+                for (int y = -shadowWidth; y <= shadowWidth; y++) {
+                    float2 shift = float2(x, y);
+                    float zLight = float(shadows.sample(linerSampler, cordinate + shift / shadowMapSize, lights[i].shadowMap));
+                    if (posiztionZ > zLight) {
+                        shift = shift / shadowWidth;
+                        shadowTotal += 2 - (shift.x * shift.x + shift.y * shift.y);
+                    }
+                }
             }
+            power = power * (1 - shadowTotal / shadowSize);
         }
         float3 color = lights[i].color * power;
         light = light + float4(color, 1);
@@ -151,6 +172,76 @@ sprite3DMirrorFragmentShader(
     return colorSample;
 }
 
+struct FragmentShaderOut {
+    float depth [[depth(any)]];
+    half4 color [[color(0)]];
+};
+
+fragment FragmentShaderOut
+simpleGizmoTextureFragmentShader(
+                       RasterizerData  in           [[stage_in]],
+                       texture2d<half> texture [[ texture(0) ]]
+                       )
+{
+    constexpr sampler nearestSampler (mag_filter::nearest, min_filter::nearest);
+
+    float4 colorSample = float4(texture.sample (nearestSampler, in.textureCoordinate));
+
+    FragmentShaderOut out;
+    out.depth = 0;
+    out.color = half4(colorSample);
+
+    if (colorSample.w < 0.01) {
+        out.depth = 1;
+        out.color = half4(0, 0, 0, 0);
+    }
+
+    return out;
+}
+
 fragment float4 sprite3DEmptyFragmentShader(RasterizerData in [[stage_in]] ){
     return float4( 0, 0, 0, 0);
+}
+
+
+struct ObjectInfo {
+    float4x4 modelMatrix;
+    unsigned int textureIndex;
+};
+
+vertex RasterizerData
+array3DVertexShader(
+                     uint vertexID [[ vertex_id ]],
+                     constant float4x4 *projectionMatrix [[ buffer(0) ]],
+                     constant ObjectInfo *infos [[ buffer(1) ]],
+                     constant InputVertex *input [[ buffer(2) ]],
+                     constant float4x4 *bones [[ buffer(3) ]],
+                     constant int *numberOfBones [[ buffer(4) ]],
+                     constant unsigned int *indexes [[ buffer(5) ]],
+                     constant int *vertexCount [[ buffer(6) ]]
+                     )
+
+{
+    int objectIndex = vertexID / *vertexCount;
+
+    InputVertex current = input[indexes[vertexID % (*vertexCount)]];
+    RasterizerData out;
+    float4 localPosition = float4(current.position, 1);
+    if (current.boneA.index > 0 && *numberOfBones > 0) {
+        float4 updatePosition = float4(0, 0, 0, 0);
+        int boneShift = objectIndex * (*numberOfBones);
+        updatePosition += (bones[boneShift + current.boneA.index] * localPosition) * current.boneA.width;
+        updatePosition += (bones[boneShift + current.boneB.index] * localPosition) * current.boneB.width;
+        updatePosition += (bones[boneShift + current.boneC.index] * localPosition) * current.boneC.width;
+        updatePosition += (bones[boneShift + current.boneD.index] * localPosition) * current.boneD.width;
+
+        updatePosition.w = 1;
+        localPosition = updatePosition;
+    }
+    float4 position = (infos[objectIndex].modelMatrix) * localPosition;
+    out.clipSpacePosition = (*projectionMatrix) * position;
+    out.realPosition = position.xyz;
+    out.textureCoordinate = current.uv;
+
+    return out;
 }

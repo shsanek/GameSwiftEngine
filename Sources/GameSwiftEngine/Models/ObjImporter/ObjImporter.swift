@@ -1,4 +1,5 @@
 import simd
+import Foundation
 
 // For import .obj file
 public final class ObjImporter {
@@ -6,7 +7,7 @@ public final class ObjImporter {
         Object(content: content)
     }
 
-    public static func loadFile(_ name: String) -> Object? {
-        Object(name: name)
+    public static func loadFile(_ name: String, bundle: Bundle) -> Object? {
+        Object(name: name, bundle: bundle)
     }
 }

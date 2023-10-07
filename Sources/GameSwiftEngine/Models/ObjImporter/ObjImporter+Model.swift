@@ -11,8 +11,8 @@ extension ObjImporter {
             public let normal: vector_float3
         }
 
-        convenience init?(name: String) {
-            guard let url = Bundle.main.url(forResource: name, withExtension: "obj") else {
+        convenience init?(name: String, bundle: Bundle) {
+            guard let url = bundle.url(forResource: name, withExtension: "obj") else {
                 return nil
             }
             guard let data = try? Data(contentsOf: url) else {

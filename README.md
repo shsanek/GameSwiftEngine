@@ -7,6 +7,8 @@ Features: Collision, dynamic shadow, bones animation.
 
 Models format:  `OBJ`, `IQE`
 
+⚠️ At the moment, the shadow is drawn with errors.
+
 ### Example screen
 
 ![image](/Screen/1.png)
@@ -14,6 +16,11 @@ Models format:  `OBJ`, `IQE`
 ## Demo
 Unfortunately you will have to use your resources to run the demo
 
+## Editor
+
+![image](/Screen/2.png)
+
+You can edit the scene in the editor. With `ObjectEditor` you can save and load the scene state and edit it (see EditorDemo). You can add to the editor your own objects inherited from `Node` with custom fields (see `DoorNode`).
 
 ## Fast instruction
 
@@ -63,8 +70,6 @@ let texture = Texture.load(in: "Asset name")
 let object = Sprite3DNode(texture: texture, size: .init(1, 1)) // generate plane
 sceneNode.addSubnode(object)
 ```
-
-DONE!!
 
 ### BaseNode
 

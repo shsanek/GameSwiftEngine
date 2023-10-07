@@ -1,0 +1,23 @@
+{
+  "pins" : [
+    {
+      "identity" : "objecteditor",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/shsanek/ObjectEditor.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "e0038a4bd23218641f2a30b446b6d8fc7d442811"
+      }
+    },
+    {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-syntax.git",
+      "state" : {
+        "revision" : "74203046135342e4a4a627476dd6caf8b28fe11b",
+        "version" : "509.0.0"
+      }
+    }
+  ],
+  "version" : 2
+}

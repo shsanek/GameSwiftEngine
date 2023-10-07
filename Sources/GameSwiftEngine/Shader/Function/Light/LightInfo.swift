@@ -13,11 +13,19 @@ final class LightInfo {
         var shadowProjection: matrix_float4x4 = .init(1)
         var shadowMap: Int32 = -1
         var shadowShiftZ: GEFloat = 0.1
+        var shadowScaleZ: GEFloat = 0.1
     }
 
     struct LightInfoSetting: Hashable {
         var shadowMapSize: Size = .init(width: 512, height: 512)
         var maxShadow: Int = 5
+        var shadowSoftWidth: Int = 3
+    }
+
+    struct SoftShadowsSetting: RawEncodable {
+        var shadowMapSize: GEFloat = 512
+        var shadowSoftWidth: Int32 = 2
+        var shadowSoftSize: GEFloat = 3
     }
 
     let lightInputCache = MetalBufferCache()
@@ -31,6 +39,7 @@ final class LightInfo {
     private var shadowCount: Int {
         shadowMapInfos.filter { $0.isActual }.count
     }
+    private(set) var softShadowsSetting: SoftShadowsSetting = SoftShadowsSetting()
     private(set) var shadowMapTexture: ITexture? = nil
     private var shadowMapInfos: [ShadowMapInfo] = []
 
@@ -65,6 +74,18 @@ final class LightInfo {
         shadowMapInfos = (0..<settings.maxShadow).map {
             ShadowMapInfo(index: $0, texture: shadowMapTexture)
         }
+
+        softShadowsSetting.shadowMapSize = settings.shadowMapSize.width
+        softShadowsSetting.shadowSoftWidth = Int32(settings.shadowSoftWidth)
+        var total: Float = 0
+        for x in -settings.shadowSoftWidth...settings.shadowSoftWidth {
+            for y in -settings.shadowSoftWidth...settings.shadowSoftWidth {
+                let fx = Float(x) / Float(settings.shadowSoftWidth)
+                let fy = Float(y) / Float(settings.shadowSoftWidth)
+                total += Float(2) - (fx * fx + fy * fy)
+            }
+        }
+        softShadowsSetting.shadowSoftSize = total
     }
 }
 
