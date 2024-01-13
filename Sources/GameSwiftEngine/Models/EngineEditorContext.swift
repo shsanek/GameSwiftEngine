@@ -8,13 +8,15 @@ extension OMContext {
                 .make(name: "Node", { Node.init() }),
                 .make(name: "Object3D", { Object3DNode.init() }),
                 .make(name: "Light", { LightNode() }),
-                .make(name: "Plane", { Plane() })
+                .make(name: "Plane", { Plane() }),
+                .make(name: "WADNode", { WADNode() })
             ])
             try context.registerModifications([
                 .make(name: "Base", { NodeBaseModification.init() }),
                 .make(name: "Object3D", { Object3DNodeModification.init() }),
                 .make(name: "Light", { NodeLightModification.init() }),
-                .make(name: "Texture", { TextureModification.init() })
+                .make(name: "Texture", { TextureModification.init() }),
+                .make(name: "WAD", { WADNodeModification.init() })
             ])
         }
         catch {

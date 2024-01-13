@@ -37,7 +37,7 @@ class PlayerNode: Node {
         light.move(to: .init(0.05, -0.3, 0))
         light.isShadow = true
         light.shadowSkipFrame = 1
-        //camera.addSubnode(light)
+        camera.addSubnode(light)
     }
 
     override func loop(_ time: Double, size: Size) throws {

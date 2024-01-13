@@ -73,6 +73,25 @@ final class MLTextureCache {
         self.device = device
         self.pixelFormat = pixelFormat
         self.texture = texture
+
+
+        let bitmapInfo =
+            CGBitmapInfo.byteOrder32Big.rawValue |
+            CGImageAlphaInfo.premultipliedLast.rawValue & CGBitmapInfo.alphaInfoMask.rawValue
+
+//        let context = CGContext(
+//            data: &data,
+//            width: texture.width,
+//            height: texture.height,
+//            bitsPerComponent: 8,
+//            bytesPerRow: texture.width * 4,
+//            space: CGColorSpaceCreateDeviceRGB(),
+//            bitmapInfo: bitmapInfo
+//        )
+//
+//        let image = context?.makeImage()
+
+
         return texture
     }
 }

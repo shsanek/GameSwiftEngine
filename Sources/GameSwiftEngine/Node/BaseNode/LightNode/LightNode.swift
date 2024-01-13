@@ -113,7 +113,7 @@ public final class LightNode: Node, CameraNodeDelegate {
         camera.renderInfo.renderAttributes.set(.ignoreColorBuffer, value: true)
         camera.projectionMatrixContainer = .constant(
             perspectiveMatrix(
-                fovyRadians: (angle ?? 0) + (attenuationAngle ?? 0),
+                fovyRadians: ((angle ?? 0) + (attenuationAngle ?? 0)) * 2,
                 aspectRatio: 1
             )
         )

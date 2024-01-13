@@ -115,7 +115,7 @@ public final class LoopController {
             camera.absoluteTransform.inverse
         )
 
-        var input = MetalRenderInput(
+        let input = MetalRenderInput(
             time: 0.1,
             device: device,
             descriptor: descriptor,

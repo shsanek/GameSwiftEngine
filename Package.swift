@@ -51,8 +51,14 @@ let package = Package(
         .target(
             name: "GameSwiftEngine",
             dependencies: [
-                .product(name: "ObjectEditor", package: "ObjectEditor")
+                .product(name: "ObjectEditor", package: "ObjectEditor"),
+                "WADFormat"
             ]
+        ),
+        .target(
+            name: "WADFormat",
+            publicHeadersPath: "PublicHeader",
+            linkerSettings: [ .linkedLibrary("c++abi") ]
         )
     ]
 )

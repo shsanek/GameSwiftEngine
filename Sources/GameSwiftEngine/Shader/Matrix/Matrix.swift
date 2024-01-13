@@ -13,8 +13,8 @@ public func perspectiveMatrix(
         columns: (
             vector_float4(xScale, 0, 0, 0),
             vector_float4(0, yScale, 0, 0),
-            vector_float4(0, 0, farZ / (nearZ - farZ), -1),
-            vector_float4(0, 0, farZ * nearZ / (nearZ - farZ), 0)
+            vector_float4(0, 0, zScale, -1),
+            vector_float4(0, 0, nearZ * zScale, 0)
         )
     )
 }

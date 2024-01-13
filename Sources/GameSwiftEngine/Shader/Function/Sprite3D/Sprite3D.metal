@@ -14,6 +14,7 @@ struct RasterizerData
     float4 clipSpacePosition [[position]];
     float3 realPosition;
     float2 textureCoordinate;
+    short atlas;
 };
 
 struct BoneBind {
@@ -29,6 +30,13 @@ struct InputVertex {
     BoneBind boneB;
     BoneBind boneC;
     BoneBind boneD;
+
+    short atlas;
+};
+
+struct InputAtlas {
+    float2 uvPosition;
+    float2 uvSize;
 };
 
 struct Light {
@@ -80,31 +88,27 @@ sprite3DVertexShader(
     out.clipSpacePosition = (*projectionMatrix) * position;
     out.realPosition = position.xyz;
     out.textureCoordinate = current.uv;
-
+    out.atlas = current.atlas;
     return out;
 }
 
-fragment float4
-sprite3DFragmentShader(
-                       RasterizerData  in           [[stage_in]],
-                       texture2d<half> colorTexture [[ texture(0) ]],
-                       depth2d_array<float, access::sample> shadows [[ texture(1) ]],
-                       constant Light *lights [[ buffer(0) ]],
-                       constant int *numberOfLights [[ buffer(1) ]],
-                       constant ShadowInfo *shadowInfo [[ buffer(2) ]]
+float4
+light3DFragmentShader(
+                       RasterizerData  in,
+                       float4 colorSample,
+                       texture2d<half> colorTexture,
+                       depth2d_array<float, access::sample> shadows,
+                       constant Light *lights,
+                       constant int *numberOfLights,
+                       constant ShadowInfo *shadowInfo
                        )
 {
+    constexpr sampler linerSampler (mag_filter::linear,
+                                    min_filter::linear);
+
     const int shadowWidth = (*shadowInfo).shadowSoftWidth;
     const float shadowSize = (*shadowInfo).shadowSoftSize;
     const float shadowMapSize = (*shadowInfo).shadowMapSize;
-
-    constexpr sampler linerSampler (mag_filter::linear,
-                                    min_filter::linear);
-    constexpr sampler nearestSampler (mag_filter::nearest,
-                                      min_filter::nearest);
-    float4 colorSample = float4(colorTexture.sample (nearestSampler, in.textureCoordinate));
-
-
     // Light
     float4 light = float4(0, 0, 0, 1);
     for (int i = 0; i < *numberOfLights; i++) {
@@ -155,9 +159,59 @@ sprite3DFragmentShader(
     if (*numberOfLights > 0) {
         colorSample = colorSample * light;
     }
-
     return float4(colorSample);
 }
+
+fragment float4
+sprite3DFragmentShader(
+                       RasterizerData  in           [[stage_in]],
+                       texture2d<half> colorTexture [[ texture(0) ]],
+                       depth2d_array<float, access::sample> shadows [[ texture(1) ]],
+                       constant Light *lights [[ buffer(0) ]],
+                       constant int *numberOfLights [[ buffer(1) ]],
+                       constant ShadowInfo *shadowInfo [[ buffer(2) ]]
+                       )
+{
+
+    constexpr sampler nearestSampler (mag_filter::nearest,
+                                      min_filter::nearest);
+    float4 colorSample = float4(colorTexture.sample (nearestSampler, in.textureCoordinate));
+
+    return light3DFragmentShader(in, colorSample, colorTexture, shadows, lights, numberOfLights, shadowInfo);
+}
+
+fragment float4
+sprite3DAtlasFragmentShader(
+                       RasterizerData  in           [[stage_in]],
+                       texture2d<half> colorTexture [[ texture(0) ]],
+                       depth2d_array<float, access::sample> shadows [[ texture(1) ]],
+                       constant Light *lights [[ buffer(0) ]],
+                       constant int *numberOfLights [[ buffer(1) ]],
+                       constant ShadowInfo *shadowInfo [[ buffer(2) ]],
+                       constant InputAtlas *atlas [[ buffer(3) ]]
+                       )
+{
+
+    constexpr sampler nearestSampler (mag_filter::nearest,
+                                      min_filter::nearest);
+    float2 uv = in.textureCoordinate;
+    InputAtlas current = atlas[in.atlas];
+
+    uv.x = fract(uv.x) * current.uvSize.x + current.uvPosition.x;
+    uv.y = fract(uv.y) * current.uvSize.y + current.uvPosition.y;
+//    uv.x =
+//    uv.y =
+
+    //float2 uv2 = float2(uv.y, uv.x);
+
+    float4 colorSample = float4(colorTexture.sample (nearestSampler, uv));
+//    colorSample.r = uv.x;
+//    colorSample.g = uv.y;
+//    colorSample.b = 0;
+
+    return light3DFragmentShader(in, colorSample, colorTexture, shadows, lights, numberOfLights, shadowInfo);
+}
+
 
 fragment float4
 sprite3DMirrorFragmentShader(

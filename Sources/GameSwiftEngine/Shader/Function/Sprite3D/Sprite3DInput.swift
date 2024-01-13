@@ -28,6 +28,16 @@ public struct InputBoneBind: Hashable, Codable {
     }
 }
 
+public struct AtlasInput: RawEncodable, Hashable, Codable {
+    public var uvPosition: vector_float2
+    public var uvSize: vector_float2
+
+    public init(uvPosition: vector_float2, uvSize: vector_float2) {
+        self.uvPosition = uvPosition
+        self.uvSize = uvSize
+    }
+}
+
 public struct VertexInput: RawEncodable, Hashable, Codable {
     public var position: vector_float3
     public var uv: vector_float2
@@ -37,9 +47,12 @@ public struct VertexInput: RawEncodable, Hashable, Codable {
     public var boneC: InputBoneBind = .empty
     public var boneD: InputBoneBind = .empty
 
-    public init(position: vector_float3, uv: vector_float2) {
+    public var atlas: UInt16 = 0
+
+    public init(position: vector_float3, uv: vector_float2, atlas: UInt16 = 0) {
         self.position = position
         self.uv = uv
+        self.atlas = atlas
     }
 }
 
@@ -56,17 +69,20 @@ public final class Sprite3DInput: ProjectionChangable, PositionChangable, LightI
     public var texture: ITexture?
     public let bones = OptionalBufferContainer<matrix_float4x4>(.init(1))
 
+    public let atlasInput = OptionalBufferContainer<AtlasInput>(.init(uvPosition: .zero, uvSize: .one))
     public let vertexIndexs = OptionalBufferContainer<UInt32>(0)
     public var vertexs = BufferContainer<VertexInput>()
 
     public init(
         texture: ITexture?,
         projectionMatrix: matrix_float4x4 = .init(1),
-        vertexs: [VertexInput]
+        vertexs: [VertexInput],
+        atlas: [AtlasInput]? = nil
     ) {
         self.projectionMatrix = projectionMatrix
         self.vertexs.values = vertexs
         self.texture = texture
+        self.atlasInput.values = atlas
     }
 
     public init(
@@ -111,6 +127,11 @@ extension Sprite3DInput: MetalRenderHandler {
         fragmentFunction: "simpleGizmoTextureFragmentShader"
     )
 
+    private static let atlasFuntion = MetalRenderFunctionName(
+        vertexFunction: "sprite3DVertexShader",
+        fragmentFunction: "sprite3DAtlasFragmentShader"
+    )
+
     static var dependencyFunctions: [MetalRenderFunctionName] {
         [mainFuntion, emptyFuntion, mirrorFuntion]
     }
@@ -128,9 +149,15 @@ extension Sprite3DInput: MetalRenderHandler {
         } else {
             switch material {
             case .default:
-                try functionsСache
-                    .get(with: Self.mainFuntion, device: device)
-                    .start(encoder: encoder)
+                if atlasInput.values == nil {
+                    try functionsСache
+                        .get(with: Self.mainFuntion, device: device)
+                        .start(encoder: encoder)
+                } else {
+                    try functionsСache
+                        .get(with: Self.atlasFuntion, device: device)
+                        .start(encoder: encoder)
+                }
             case .mirror:
                 try functionsСache
                     .get(with: Self.mirrorFuntion, device: device)
@@ -184,6 +211,10 @@ extension Sprite3DInput: MetalRenderHandler {
 
         var softShadowInfo = lightInfo?.softShadowsSetting ?? .init()
         encoder.setFragmentBytes(&softShadowInfo, length: MemoryLayout<LightInfo.SoftShadowsSetting>.stride, index: 2)
+
+        if let buffer = try atlasInput.getOptionalBuffer(with: device) {
+            encoder.setFragmentBuffer(buffer, offset: 0, index: 3)
+        }
     }
 
     private func prepareVertex(encoder: MTLRenderCommandEncoder, device: MTLDevice) throws {

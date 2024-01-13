@@ -12,7 +12,8 @@ extension OMContext {
         do {
             try context.registerObjects([
                 .make(name: "Zoombe", { ZombeeNode() }),
-                .make(name: "Door", { DoorNode() })
+                .make(name: "Door", { DoorNode() }),
+                .make(name: "Map", { LevelNode(text: testMap) })
             ])
             try context.registerModifications([
                 .make({ DoorNodeModification() })

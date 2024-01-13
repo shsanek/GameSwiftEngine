@@ -46,7 +46,7 @@ class DoorNode: Node, INodeActive {
         let light = LightNode()
         light.power = 0.05
         light.color = .init(x: 1, y: 0, z: 0)
-        addSubnode(light)
+        // addSubnode(light)
         light.move(to: .init(0, 0.5, 0))
     }
 
@@ -92,7 +92,64 @@ extension DoorNode {
 }
 
 
-@EditorModification<DoorNode>
+
 struct DoorNodeModification: IEditorModification {
     @Editable public var isOpen: Bool = false
+    
+    
+    enum CodingKeys: String, CodingKey {
+        case isOpen
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.isOpen = try container.decode(Bool.self, forKey: .isOpen)
+    }
+    
+    public init(isOpen: Bool = false) {
+        self.isOpen = isOpen
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.isOpen, forKey: .isOpen)
+    }
+    
+#if canImport (SwiftUI)
+    public func _makeEditSwiftUIView() throws -> AnyView {
+        let views: [EditorModificationView.ViewContainer] = [
+            .init(id: "isOpen", view: try _isOpen.createEditorSwiftUIView(with: "isOpen"))
+        ]
+        return AnyView(EditorModificationView(views: views))
+    }
+#endif
+    
+    public init(_ object: DoorNode) {
+        self.isOpen = object.isOpen
+    }
+    
+    public func _subscribeObject(_ object: DoorNode) {
+        
+        
+        self._isOpen.updateObjectHandler = { [weak object] in
+            guard let object = object else {
+                return
+            }
+            object.isOpen = $0
+        }
+    }
+    
+    public func _updateObject(_ object: DoorNode) {
+        object.isOpen = self.isOpen
+    }
+    
+    public func _updateModification(_ object: DoorNode) {
+        self.isOpen = object.isOpen
+    }
+    
+    public static var defaultValue: Self {
+        .init()
+    }
+    
+    
 }
