@@ -19,10 +19,6 @@ Unfortunately you will have to use your resources to run the demo
 You can edit the scene in the editor. With `ObjectEditor` you can save and load the scene state and edit it (see EditorDemo). You can add to the editor your own objects inherited from `Node` with custom fields (see `DoorNode`).
 [](end_description)
 
-## Warning
-
-⚠️ At the moment, the shadow is drawn with errors.
-
 ## Fast instruction
 
 Added SMP
