@@ -23,10 +23,16 @@ extension vector_float4 {
     public var xyz: vector_float3 {
         return .init(x, y, z)
     }
+
+
 }
 
 extension vector_float3 {
     public var to4: vector_float4 {
         return .init(x, y, z, 1)
+    }
+
+    public var xz: vector_float2 {
+        return .init(x, z)
     }
 }

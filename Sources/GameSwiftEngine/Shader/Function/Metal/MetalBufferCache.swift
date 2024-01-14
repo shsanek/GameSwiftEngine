@@ -1,6 +1,36 @@
 import Foundation
 import MetalKit
 
+
+@propertyWrapper public struct Buffer<Element: RawEncodable> {
+    public let container = BufferContainer<Element>()
+    public var wrappedValue: Element {
+        set { container.values = [newValue] }
+        get { container.values[0] }
+    }
+
+    public init(wrappedValue: Element) {
+        container.values = [wrappedValue]
+    }
+}
+
+@propertyWrapper public struct BufferArray<Element: RawEncodable> {
+    public private(set) var container = BufferContainer<Element>()
+
+    public var wrappedValue: [Element] {
+        set { container.values = newValue }
+        get { container.values }
+    }
+
+    public init(wrappedValue: [Element]) {
+        container.values = wrappedValue
+    }
+
+    public init(container: BufferContainer<Element>) {
+        self.container = container
+    }
+}
+
 public final class BufferContainer<Element: RawEncodable> {
     public var values: [Element] = [] {
         didSet {

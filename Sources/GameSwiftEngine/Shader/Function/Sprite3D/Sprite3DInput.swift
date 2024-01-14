@@ -56,6 +56,7 @@ public struct VertexInput: RawEncodable, Hashable, Codable {
     }
 }
 
+
 public struct BoneTransform {
     public let transform: matrix_float4x4
 }
@@ -606,3 +607,227 @@ extension Objects3DArray: MetalRenderHandler {
         encoder.setVertexBytes(&vertexCount, length: MemoryLayout<Int32>.stride, index: 6)
     }
 }
+
+public struct GrassVertex: RawEncodable, Hashable, Codable {
+    public var position: vector_float3
+    public var uv: vector_float2
+
+    public var atlas: UInt16 = 0
+
+    public init(
+        position: vector_float3,
+        uv: vector_float2,
+        atlas: UInt16 = 0
+    ) {
+        self.position = position
+        self.uv = uv
+        self.atlas = atlas
+    }
+}
+
+public struct GrassInfo: RawEncodable, Hashable, Codable {
+    public var lowPoly: Int32
+    public var hightPoly: Int32
+    public var hightPolyCount: Int32
+    public var maxHeight: Float32
+
+    public init(lowPoly: Int32, hightPoly: Int32, hightPolyCount: Int32, maxHeight: Float32 = 1.0) {
+        self.lowPoly = lowPoly
+        self.hightPoly = hightPoly
+        self.hightPolyCount = hightPolyCount
+        self.maxHeight = maxHeight
+    }
+}
+
+public final class GrassInput: ProjectionChangable, PositionChangable, LightInfoChangable {
+    var projectionMatrix: matrix_float4x4
+    var positionMatrix: matrix_float4x4 = .init(1)
+    var lightInfo: LightInfo?
+    public var material: Material = .default
+
+    public var lowCount: Int = 0 {
+        didSet {
+            updateIfNeeded()
+        }
+    }
+    public var hightCount: Int = 1 {
+        didSet {
+            updateIfNeeded()
+        }
+    }
+
+    @BufferArray public var heightVertexs: [GrassVertex] = [] {
+        didSet {
+            updateIfNeeded()
+        }
+    }
+    @BufferArray public var lowVertexs: [GrassVertex] = [] {
+        didSet {
+            updateIfNeeded()
+        }
+    }
+    @Buffer private var grassInfoContainer: GrassInfo = .init(
+        lowPoly: 1, hightPoly: 1, hightPolyCount: 1
+    )
+
+    @Buffer public var time: Float32 = 0
+
+    public var texture: ITexture?
+    public let atlasInput = OptionalBufferContainer<AtlasInput>(.init(uvPosition: .zero, uvSize: .one))
+    private var count: Int = 0
+
+    public init(
+        texture: ITexture?,
+        projectionMatrix: matrix_float4x4 = .init(1),
+        lowVertexs: [GrassVertex],
+        heightVertexs: [GrassVertex],
+        atlas: [AtlasInput]? = nil
+    ) {
+        self.projectionMatrix = projectionMatrix
+        self.heightVertexs = heightVertexs
+        self.lowVertexs = lowVertexs
+        self.texture = texture
+        self.atlasInput.values = atlas
+        updateIfNeeded()
+    }
+
+    public init(
+        texture: ITexture?,
+        projectionMatrix: matrix_float4x4 = .init(1),
+        vertexs: BufferContainer<GrassVertex>
+    ) {
+        self.projectionMatrix = projectionMatrix
+        self._lowVertexs = .init(container: vertexs)
+        self._heightVertexs = .init(container: vertexs)
+        self.texture = texture
+        updateIfNeeded()
+    }
+
+    public func updateIfNeeded() {
+        self.count = lowVertexs.count * lowCount + heightVertexs.count * hightCount
+        let maxHeight = max(heightVertexs.max(by: { $0.position.y < $1.position.y })?.position.y ?? 1, 0.01)
+        self.grassInfoContainer = .init(
+            lowPoly: Int32(lowVertexs.count),
+            hightPoly: Int32(heightVertexs.count),
+            hightPolyCount: Int32(hightCount * heightVertexs.count),
+            maxHeight: maxHeight
+        )
+    }
+}
+
+extension GrassInput: MetalRenderHandler {
+    private static let mainFuntion = MetalRenderFunctionName(
+        vertexFunction: "grassVertexShader",
+        fragmentFunction: "sprite3DFragmentShader"
+    )
+
+    private static let emptyFuntion = MetalRenderFunctionName(
+        vertexFunction: "grassVertexShader",
+        fragmentFunction: "sprite3DEmptyFragmentShader"
+    )
+
+    private static let mirrorFuntion = MetalRenderFunctionName(
+        vertexFunction: "grassVertexShader",
+        fragmentFunction: "sprite3DMirrorFragmentShader"
+    )
+
+    private static let gizmoFuntion = MetalRenderFunctionName(
+        vertexFunction: "grassVertexShader",
+        fragmentFunction: "simpleGizmoTextureFragmentShader"
+    )
+
+    private static let atlasFuntion = MetalRenderFunctionName(
+        vertexFunction: "grassVertexShader",
+        fragmentFunction: "sprite3DAtlasFragmentShader"
+    )
+
+    static var dependencyFunctions: [MetalRenderFunctionName] {
+        [mainFuntion, emptyFuntion, mirrorFuntion]
+    }
+
+    func renderEncode(
+        _ encoder: MTLRenderCommandEncoder,
+        device: MTLDevice,
+        attributes: RenderAttributes,
+        functionsСache: RenderFunctionsCache
+    ) throws {
+        guard count > 0 else {
+            return
+        }
+        if attributes.getValue(.ignoreColorBuffer) {
+            try functionsСache
+                .get(with: Self.emptyFuntion, device: device)
+                .start(encoder: encoder)
+        } else {
+            switch material {
+            case .default:
+                if atlasInput.values == nil {
+                    try functionsСache
+                        .get(with: Self.mainFuntion, device: device)
+                        .start(encoder: encoder)
+                } else {
+                    try functionsСache
+                        .get(with: Self.atlasFuntion, device: device)
+                        .start(encoder: encoder)
+                }
+            case .mirror:
+                try functionsСache
+                    .get(with: Self.mirrorFuntion, device: device)
+                    .start(encoder: encoder)
+            case .gizmo:
+                try functionsСache
+                    .get(with: Self.gizmoFuntion, device: device)
+                    .start(encoder: encoder)
+            }
+
+            try prepareFragment(encoder: encoder, device: device)
+        }
+        try prepareVertex(encoder: encoder, device: device)
+        try render(encoder: encoder, device: device)
+    }
+
+    private func render(encoder: MTLRenderCommandEncoder, device: MTLDevice) throws {
+        encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: count)
+    }
+
+    private func prepareFragment(encoder: MTLRenderCommandEncoder, device: MTLDevice) throws {
+        let texture = self.texture?.metal?.getMLTexture(device: device)
+        let light = try? lightInfo.getBuffer(for: device)
+
+        encoder.setFragmentTexture(texture, index: 0)
+
+        guard material != .mirror && material != .gizmo else {
+            return
+        }
+        var count: Int32 = Int32(light?.1 ?? 0)
+        if let light = light?.0 {
+            encoder.setFragmentBuffer(light, offset: 0, index: 0)
+        } else {
+            var light = LightInfo.Light(position: .zero, color: .zero, power: 0)
+            encoder.setFragmentBytes(&light, length: MemoryLayout<LightInfo.Light>.stride, index: 0)
+        }
+        if let lightInfo = lightInfo {
+            encoder.setFragmentTexture(lightInfo.shadowMapTexture?.metal?.getMLTexture(device: device), index: 1)
+        }
+        encoder.setFragmentBytes(&count, length: MemoryLayout<Int32>.stride, index: 1)
+
+        var softShadowInfo = lightInfo?.softShadowsSetting ?? .init()
+        encoder.setFragmentBytes(&softShadowInfo, length: MemoryLayout<LightInfo.SoftShadowsSetting>.stride, index: 2)
+
+        if let buffer = try atlasInput.getOptionalBuffer(with: device) {
+            encoder.setFragmentBuffer(buffer, offset: 0, index: 3)
+        }
+    }
+
+    private func prepareVertex(encoder: MTLRenderCommandEncoder, device: MTLDevice) throws {
+        encoder.setVertexBytes(&projectionMatrix, length: MemoryLayout<matrix_float4x4>.stride, index: 0)
+        encoder.setVertexBytes(&positionMatrix, length: MemoryLayout<matrix_float4x4>.stride, index: 1)
+
+        encoder.setVertexBuffer(try _grassInfoContainer.container.getBuffer(with: device), offset: 0, index: 2)
+        encoder.setVertexBuffer(try _lowVertexs.container.getBuffer(with: device), offset: 0, index: 3)
+        encoder.setVertexBuffer(try _heightVertexs.container.getBuffer(with: device), offset: 0, index: 4)
+        encoder.setVertexBuffer(try _time.container.getBuffer(with: device), offset: 0, index: 5)
+    }
+}
+
+extension Float32: RawEncodable { }

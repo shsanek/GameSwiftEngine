@@ -1,21 +1,4 @@
-/*
-See LICENSE folder for this sample’s licensing information.
-
-Abstract:
-Metal shaders used for this sample
-*/
-
-#include <metal_stdlib>
-
-using namespace metal;
-
-struct RasterizerData
-{
-    float4 clipSpacePosition [[position]];
-    float3 realPosition;
-    float2 textureCoordinate;
-    short atlas;
-};
+#include "BaseStruct.h"
 
 struct BoneBind {
     int index;
@@ -199,15 +182,8 @@ sprite3DAtlasFragmentShader(
 
     uv.x = fract(uv.x) * current.uvSize.x + current.uvPosition.x;
     uv.y = fract(uv.y) * current.uvSize.y + current.uvPosition.y;
-//    uv.x =
-//    uv.y =
-
-    //float2 uv2 = float2(uv.y, uv.x);
 
     float4 colorSample = float4(colorTexture.sample (nearestSampler, uv));
-//    colorSample.r = uv.x;
-//    colorSample.g = uv.y;
-//    colorSample.b = 0;
 
     return light3DFragmentShader(in, colorSample, colorTexture, shadows, lights, numberOfLights, shadowInfo);
 }
