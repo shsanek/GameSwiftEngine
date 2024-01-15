@@ -5,6 +5,11 @@ struct GrassInfo {
     int hightPoly;
     int hightPolyCount;
     float maxHeight;
+
+    float density;
+
+    float windForce;
+    float windNoiseScale;
 };
 
 struct GrassVertex {
@@ -122,7 +127,11 @@ vertex RasterizerData grassVertexShader(
     float4 windPosition = localPosition;
     float t = localPosition.y / info->maxHeight;
 
-    float bezierMoveY = cos(*time * rand(globalPosition) * 5 + rand(globalPosition)) * 0.05;
+    float2 wind = float2(0.0, 1);
+    float windAnge = angleBetweenVectors(wind);
+    float strongWind = perlin(globalPosition / 20 * info->windNoiseScale + *time * wind * info->windNoiseScale) * info->windForce;
+
+    float bezierMoveY = cos(*time * rand(globalPosition) * 5 + rand(globalPosition)) * 0.1 * (strongWind + info->windForce)e;
 
     float2 base = cubicBezier(
         t,
@@ -136,9 +145,6 @@ vertex RasterizerData grassVertexShader(
     localPosition.y = base.y * h;
     localPosition = rotateY(localPosition, rand(globalPosition * 10) * 2 * pi);
 
-    float2 wind = float2(0.0, 1);
-    float windAnge = angleBetweenVectors(wind);
-    float strongWind = perlin(globalPosition / 20 + *time * wind) * 0.8;
 
     windPosition.z = base.x * (h);
     windPosition.y = base.y * (h / 2);
@@ -147,8 +153,8 @@ vertex RasterizerData grassVertexShader(
 
     localPosition = localPosition * (1 - strongWind) + windPosition * strongWind;
 
-    localPosition.x += float(rx + sx);
-    localPosition.z += float(ry + sy);
+    localPosition.x += float(rx + sx) * info->density;
+    localPosition.z += float(ry + sy) * info->density;
     float4 position = (*positionMatrix) * localPosition;
     out.clipSpacePosition = (*projectionMatrix) * position;
     out.realPosition = position.xyz;

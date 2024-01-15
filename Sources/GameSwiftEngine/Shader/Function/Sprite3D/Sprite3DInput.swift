@@ -630,12 +630,19 @@ public struct GrassInfo: RawEncodable, Hashable, Codable {
     public var hightPoly: Int32
     public var hightPolyCount: Int32
     public var maxHeight: Float32
+    public var density: Float32 = 1.0
 
-    public init(lowPoly: Int32, hightPoly: Int32, hightPolyCount: Int32, maxHeight: Float32 = 1.0) {
+    public var windForce: Float32 = 1.0
+    public var windNoiseScale: Float32 = 1.0
+
+    public init(lowPoly: Int32, hightPoly: Int32, hightPolyCount: Int32, maxHeight: Float32 = 1.0, density: Float32, windForce: Float32 = 1.0, windNoiseScale: Float32 = 1.0) {
         self.lowPoly = lowPoly
         self.hightPoly = hightPoly
         self.hightPolyCount = hightPolyCount
         self.maxHeight = maxHeight
+        self.density = density
+        self.windForce = windForce
+        self.windNoiseScale = windNoiseScale
     }
 }
 
@@ -656,6 +663,24 @@ public final class GrassInput: ProjectionChangable, PositionChangable, LightInfo
         }
     }
 
+    public var density: Float32 = 1.0 {
+        didSet {
+            updateIfNeeded()
+        }
+    }
+
+    public var windForce: Float32 = 1.0 {
+        didSet {
+            updateIfNeeded()
+        }
+    }
+    public var windNoiseScale: Float32 = 1.0 {
+        didSet {
+            updateIfNeeded()
+        }
+    }
+
+
     @BufferArray public var heightVertexs: [GrassVertex] = [] {
         didSet {
             updateIfNeeded()
@@ -667,7 +692,7 @@ public final class GrassInput: ProjectionChangable, PositionChangable, LightInfo
         }
     }
     @Buffer private var grassInfoContainer: GrassInfo = .init(
-        lowPoly: 1, hightPoly: 1, hightPolyCount: 1
+        lowPoly: 1, hightPoly: 1, hightPolyCount: 1, density: 1
     )
 
     @Buffer public var time: Float32 = 0
@@ -710,7 +735,10 @@ public final class GrassInput: ProjectionChangable, PositionChangable, LightInfo
             lowPoly: Int32(lowVertexs.count),
             hightPoly: Int32(heightVertexs.count),
             hightPolyCount: Int32(hightCount * heightVertexs.count),
-            maxHeight: maxHeight
+            maxHeight: maxHeight, 
+            density: density,
+            windForce: windForce,
+            windNoiseScale: windNoiseScale
         )
     }
 }
