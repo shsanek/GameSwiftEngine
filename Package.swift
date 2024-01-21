@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "GameSwiftEngine",
-    platforms: [.iOS(.v13), .macOS(.v14)],
+    platforms: [.iOS(.v16), .macOS(.v14)],
     products: [
         .library(
             name: "GameSwiftEngine",

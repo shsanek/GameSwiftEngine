@@ -15,3 +15,8 @@ protocol PositionChangable {
 protocol LightInfoChangable {
     var lightInfo: LightInfo? { get set }
 }
+
+
+protocol CameraPositionChangable {
+    var cameraPositionMatrix: matrix_float4x4 { get set }
+}

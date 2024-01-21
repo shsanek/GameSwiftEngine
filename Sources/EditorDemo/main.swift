@@ -1,10 +1,12 @@
-import AppKit
 import SwiftUI
 import Editor
 import GameSwiftDemo
 import GameSwiftEngine
 import Foundation
 import ObjectEditor
+
+import AppKit
+#if canImport(AppKit)
 
 ResourcesPool.default.addContainer(
     FolderResourcesContainer(path: "/Users/alexandershipin/Documents/projects/GameSwiftEngine/Sources/GameSwiftDemo"),
@@ -38,3 +40,4 @@ try editor.start({ view in
 window.show(inFullScreen: true, title: "Editor")
 
 app.run()
+#endif

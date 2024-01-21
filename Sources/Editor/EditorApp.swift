@@ -1,9 +1,11 @@
-import AppKit
 import SwiftUI
 import GameSwiftEngine
 import ObjectEditor
 
 import simd
+
+#if canImport(AppKit)
+import AppKit
 
 @available(macOS 10.15, *)
 public class AppDelegate: NSObject, NSApplicationDelegate {
@@ -28,6 +30,8 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
         willResignActive()
     }
 }
+
+#endif
 
 public final class EditorProjectManagerDelegate: IEditorProjectManagerDelegate {
     private var windows = [EditorWindow]()
@@ -304,6 +308,9 @@ final class EditorControl {
         let s = max(GEFloat(startZoom / zoom), 1)
         containerNode.updateModification(NodeBaseModification.self) { mod in
             mod.localScale = .init(x: s, y: s, z: s)
+        }
+        cameraNode.updateModification(NodeBaseModification.self) { mod in
+            mod.localScale = .init(x: 1 / s, y: 1 / s, z: 1 / s)
         }
         cameraNode.gridScale = s
     }

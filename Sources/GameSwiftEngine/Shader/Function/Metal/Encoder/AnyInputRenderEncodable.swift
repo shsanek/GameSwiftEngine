@@ -29,7 +29,9 @@ extension MetalRenderHandler {
         if var change = self as? LightInfoChangable {
             change.lightInfo = input.lightInfo
         }
-
+        if var change = self as? CameraPositionChangable {
+            change.cameraPositionMatrix = input.cameraPosition
+        }
         try self.renderEncode(
             input.encoder,
             device: input.device,

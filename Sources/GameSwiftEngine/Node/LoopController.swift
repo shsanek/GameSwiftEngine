@@ -124,6 +124,7 @@ public final class LoopController {
             attributes: camera.renderInfo.renderAttributes,
             functionCache: functions,
             projectionMatrix: cameraMatrix,
+            cameraPosition: camera.absoluteTransform.inverse,
             lightInfo: ignoreLight ? nil : node.lightController.lightInfo
         )
 

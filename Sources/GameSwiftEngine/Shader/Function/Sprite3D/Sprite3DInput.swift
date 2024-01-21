@@ -63,7 +63,7 @@ public struct BoneTransform {
 
 public final class Sprite3DInput: ProjectionChangable, PositionChangable, LightInfoChangable {
     var projectionMatrix: matrix_float4x4
-    var positionMatrix: matrix_float4x4 = .init(1)
+    @Buffer var positionMatrix: matrix_float4x4 = .init(1)
     var lightInfo: LightInfo?
     public var material: Material = .default
 
@@ -222,7 +222,7 @@ extension Sprite3DInput: MetalRenderHandler {
         let input = try vertexs.getBuffer(with: device)
 
         encoder.setVertexBytes(&projectionMatrix, length: MemoryLayout<matrix_float4x4>.stride, index: 0)
-        encoder.setVertexBytes(&positionMatrix, length: MemoryLayout<matrix_float4x4>.stride, index: 1)
+        encoder.setVertexBuffer(try _positionMatrix.container.getBuffer(with: device), offset: 0, index: 1)
 
         encoder.setVertexBuffer(input, offset: 0, index: 2)
         encoder.setVertexBuffer(try bones.getBuffer(with: device), offset: 0, index: 3)
@@ -646,9 +646,15 @@ public struct GrassInfo: RawEncodable, Hashable, Codable {
     }
 }
 
-public final class GrassInput: ProjectionChangable, PositionChangable, LightInfoChangable {
-    var projectionMatrix: matrix_float4x4
-    var positionMatrix: matrix_float4x4 = .init(1)
+public final class GrassInput:
+    CameraPositionChangable,
+    PositionChangable,
+    LightInfoChangable,
+    ProjectionChangable
+{
+    var projectionMatrix: matrix_float4x4 = .init(1)
+    var cameraPositionMatrix: matrix_float4x4 = .init(1)
+    @Buffer var positionMatrix: matrix_float4x4 = .init(1)
     var lightInfo: LightInfo?
     public var material: Material = .default
 
@@ -703,12 +709,10 @@ public final class GrassInput: ProjectionChangable, PositionChangable, LightInfo
 
     public init(
         texture: ITexture?,
-        projectionMatrix: matrix_float4x4 = .init(1),
         lowVertexs: [GrassVertex],
         heightVertexs: [GrassVertex],
         atlas: [AtlasInput]? = nil
     ) {
-        self.projectionMatrix = projectionMatrix
         self.heightVertexs = heightVertexs
         self.lowVertexs = lowVertexs
         self.texture = texture
@@ -718,10 +722,8 @@ public final class GrassInput: ProjectionChangable, PositionChangable, LightInfo
 
     public init(
         texture: ITexture?,
-        projectionMatrix: matrix_float4x4 = .init(1),
         vertexs: BufferContainer<GrassVertex>
     ) {
-        self.projectionMatrix = projectionMatrix
         self._lowVertexs = .init(container: vertexs)
         self._heightVertexs = .init(container: vertexs)
         self.texture = texture
@@ -744,33 +746,38 @@ public final class GrassInput: ProjectionChangable, PositionChangable, LightInfo
 }
 
 extension GrassInput: MetalRenderHandler {
-    private static let mainFuntion = MetalRenderFunctionName(
-        vertexFunction: "grassVertexShader",
+    private static let mainFuntion = MetalMeshFunctionName(
+        meshFunction: "meshShaderMeshStageFunction",
+        objectFunction: "meshShaderObjectStageFunction",
         fragmentFunction: "sprite3DFragmentShader"
     )
 
-    private static let emptyFuntion = MetalRenderFunctionName(
-        vertexFunction: "grassVertexShader",
+    private static let emptyFuntion = MetalMeshFunctionName(
+        meshFunction: "meshShaderMeshStageFunction",
+        objectFunction: "meshShaderObjectStageFunction",
         fragmentFunction: "sprite3DEmptyFragmentShader"
     )
 
-    private static let mirrorFuntion = MetalRenderFunctionName(
-        vertexFunction: "grassVertexShader",
+    private static let mirrorFuntion = MetalMeshFunctionName(
+        meshFunction: "meshShaderMeshStageFunction",
+        objectFunction: "meshShaderObjectStageFunction",
         fragmentFunction: "sprite3DMirrorFragmentShader"
     )
 
-    private static let gizmoFuntion = MetalRenderFunctionName(
-        vertexFunction: "grassVertexShader",
+    private static let gizmoFuntion = MetalMeshFunctionName(
+        meshFunction: "meshShaderMeshStageFunction",
+        objectFunction: "meshShaderObjectStageFunction",
         fragmentFunction: "simpleGizmoTextureFragmentShader"
     )
 
-    private static let atlasFuntion = MetalRenderFunctionName(
-        vertexFunction: "grassVertexShader",
+    private static let atlasFuntion = MetalMeshFunctionName(
+        meshFunction: "meshShaderMeshStageFunction",
+        objectFunction: "meshShaderObjectStageFunction",
         fragmentFunction: "sprite3DAtlasFragmentShader"
     )
 
     static var dependencyFunctions: [MetalRenderFunctionName] {
-        [mainFuntion, emptyFuntion, mirrorFuntion]
+        []
     }
 
     func renderEncode(
@@ -815,7 +822,10 @@ extension GrassInput: MetalRenderHandler {
     }
 
     private func render(encoder: MTLRenderCommandEncoder, device: MTLDevice) throws {
-        encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: count)
+        let oGroups = MTLSize(width: 128, height: 128, depth: 1)
+        let oThreads = MTLSize(width: 16, height: 1, depth: 1)
+        let mThreads = MTLSize(width: 96, height: 1, depth: 1)
+        encoder.drawMeshThreadgroups(oGroups, threadsPerObjectThreadgroup: oThreads, threadsPerMeshThreadgroup: mThreads)
     }
 
     private func prepareFragment(encoder: MTLRenderCommandEncoder, device: MTLDevice) throws {
@@ -848,13 +858,17 @@ extension GrassInput: MetalRenderHandler {
     }
 
     private func prepareVertex(encoder: MTLRenderCommandEncoder, device: MTLDevice) throws {
-        encoder.setVertexBytes(&projectionMatrix, length: MemoryLayout<matrix_float4x4>.stride, index: 0)
-        encoder.setVertexBytes(&positionMatrix, length: MemoryLayout<matrix_float4x4>.stride, index: 1)
+        let info = try _grassInfoContainer.container.getBuffer(with: device)
+        encoder.setObjectBytes(&cameraPositionMatrix, length: MemoryLayout<matrix_float4x4>.stride, index: 0)
+        encoder.setObjectBuffer(try _positionMatrix.container.getBuffer(with: device), offset: 0, index: 1)
+        encoder.setObjectBuffer(info, offset: 0, index: 2)
 
-        encoder.setVertexBuffer(try _grassInfoContainer.container.getBuffer(with: device), offset: 0, index: 2)
-        encoder.setVertexBuffer(try _lowVertexs.container.getBuffer(with: device), offset: 0, index: 3)
-        encoder.setVertexBuffer(try _heightVertexs.container.getBuffer(with: device), offset: 0, index: 4)
-        encoder.setVertexBuffer(try _time.container.getBuffer(with: device), offset: 0, index: 5)
+        encoder.setMeshBytes(&projectionMatrix, length: MemoryLayout<matrix_float4x4>.stride, index: 0)
+        encoder.setMeshBytes(&positionMatrix, length: MemoryLayout<matrix_float4x4>.stride, index: 1)
+        encoder.setMeshBuffer(info, offset: 0, index: 2)
+        encoder.setMeshBuffer(try _lowVertexs.container.getBuffer(with: device), offset: 0, index: 3)
+        encoder.setMeshBuffer(try _heightVertexs.container.getBuffer(with: device), offset: 0, index: 4)
+        encoder.setMeshBuffer(try _time.container.getBuffer(with: device), offset: 0, index: 5)
     }
 }
 
